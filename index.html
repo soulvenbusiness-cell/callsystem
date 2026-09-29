@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CallDesk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  // apply saved language and theme before first paint
+  (function(){ try {
+    var l = localStorage.getItem("calls.lang") || "en", t = localStorage.getItem("calls.theme") || "light";
+    var h = document.documentElement; h.lang = l; h.dir = l === "ar" ? "rtl" : "ltr"; h.setAttribute("data-theme", t);
+  } catch(e){} })();
+</script>
+<style>
+:root{
+  --bg:#FFFFFF; --card:#FFFFFF; --soft:#F7F8FA; --soft2:#EFF1F4; --hover:#FAFBFC; --ink:#0E1726; --ink2:#344054; --muted:#667085; --line:#E6E8EC;
+  --brand:#0B7A5F; --brand-dk:#086049; --brand-soft:#E4F3EE; --brand-tint:#F4FBF8;
+  --new:#0B7A5F; --new-soft:#E4F3EE; --inc:#C2410C; --inc-soft:#FDEEE4; --fu:#4F46E5; --fu-soft:#EDECFD;
+  --warn:#B45309; --warn-soft:#FEF3DC; --bad:#B42318; --bad-soft:#FDECEA; --bad-line:#F3C7C2; --wa:#179848; --wa-soft:#E3F6EA;
+  --grid:#EEF0F3; --axis:#98A2B3; --empty:#C4CAD3; --overlay:rgba(14,23,38,.45);
+  --note-ink:#6B3A06; --bad-ink:#7A1A12; --alert-ink:#2B2596;
+  --shadow:0 1px 2px rgba(14,23,38,.05); --shadow-lg:0 24px 60px rgba(14,23,38,.18);
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0B0F14; --card:#11161D; --soft:#161C24; --soft2:#1E2630; --hover:#151B23; --ink:#E7EBF0; --ink2:#C3CBD6; --muted:#8B96A5; --line:#232C37;
+  --brand:#16A07C; --brand-dk:#5FD3AE; --brand-soft:rgba(22,160,124,.16); --brand-tint:rgba(22,160,124,.08);
+  --new:#34C79E; --new-soft:rgba(52,199,158,.14); --inc:#F0894F; --inc-soft:rgba(240,137,79,.14); --fu:#8F8AFF; --fu-soft:rgba(143,138,255,.15);
+  --warn:#F2B34B; --warn-soft:rgba(242,179,75,.13); --bad:#F2766E; --bad-soft:rgba(242,118,110,.13); --bad-line:rgba(242,118,110,.35); --wa:#3CC476; --wa-soft:rgba(60,196,118,.13);
+  --grid:#1F2731; --axis:#6B7684; --empty:#3A4552; --overlay:rgba(0,0,0,.6);
+  --note-ink:#F6D59A; --bad-ink:#F9B8B2; --alert-ink:#C9C6FF;
+  --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 24px 60px rgba(0,0,0,.55); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0B0F14; --card:#11161D; --soft:#161C24; --soft2:#1E2630; --hover:#151B23; --ink:#E7EBF0; --ink2:#C3CBD6; --muted:#8B96A5; --line:#232C37;
+  --brand:#16A07C; --brand-dk:#5FD3AE; --brand-soft:rgba(22,160,124,.16); --brand-tint:rgba(22,160,124,.08);
+  --new:#34C79E; --new-soft:rgba(52,199,158,.14); --inc:#F0894F; --inc-soft:rgba(240,137,79,.14); --fu:#8F8AFF; --fu-soft:rgba(143,138,255,.15);
+  --warn:#F2B34B; --warn-soft:rgba(242,179,75,.13); --bad:#F2766E; --bad-soft:rgba(242,118,110,.13); --bad-line:rgba(242,118,110,.35); --wa:#3CC476; --wa-soft:rgba(60,196,118,.13);
+  --grid:#1F2731; --axis:#6B7684; --empty:#3A4552; --overlay:rgba(0,0,0,.6);
+  --note-ink:#F6D59A; --bad-ink:#F9B8B2; --alert-ink:#C9C6FF;
+  --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 24px 60px rgba(0,0,0,.55); color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Manrope","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+[lang="ar"] body{font-family:"IBM Plex Sans Arabic","Manrope",system-ui,"Segoe UI",Tahoma,sans-serif;font-size:15px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #8FB8FF;outline-offset:2px;border-radius:8px}
+.hidden{display:none !important}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:.84rem}
+svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ltr{direction:ltr;unicode-bidi:isolate}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;border-inline-end:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:6px;background:var(--card)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.12rem;letter-spacing:-.01em;padding:0 8px 18px;font-family:"Manrope",sans-serif}
+.logo .mk{width:34px;height:34px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center}
+.logo .mk svg{width:18px;height:18px;fill:currentColor;stroke:none}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--ink2);font-weight:600;text-align:start}
+.nav button:hover{background:var(--soft)}
+.nav button[aria-current="page"]{background:var(--brand-soft);color:var(--brand-dk)}
+.nav .cnt{margin-inline-start:auto;background:var(--brand);color:#fff;font-size:.72rem;padding:1px 8px;border-radius:99px}
+.side .foot{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.prefs{display:flex;align-items:center;gap:8px}
+.me{display:flex;align-items:center;gap:10px;padding:4px 6px}
+.me b{display:block;font-size:.9rem} .me span{font-size:.78rem;color:var(--muted)}
+.seg{display:inline-flex;background:var(--soft2);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600;font-size:.84rem;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(14,23,38,.12)}
+.seg.full{display:flex} .seg.full button{flex:1}
+#langSeg button{min-width:40px;font-family:"Manrope","IBM Plex Sans Arabic",sans-serif}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);font-weight:600;margin-inline-start:auto}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--empty)}
+.live.on i{background:#22A06B;box-shadow:0 0 0 3px rgba(34,160,107,.2)}
+main.page{padding:28px 36px 48px;max-width:1240px;width:100%}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.ph h1{margin:0;font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+[lang="ar"] .ph h1{letter-spacing:0}
+.ph p{margin:4px 0 0;color:var(--muted)}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{position:sticky;top:0;height:auto;z-index:6;flex-direction:row;align-items:center;flex-wrap:wrap;padding:10px 14px;border-inline-end:0;border-bottom:1px solid var(--line);gap:8px}
+  .logo{padding:0;font-size:1rem}
+  .nav{flex-direction:row;overflow-x:auto;order:3;width:100%}
+  .nav button{white-space:nowrap}
+  .side .foot{margin:0;margin-inline-start:auto;flex-direction:row;align-items:center;border:0;padding:0;flex-wrap:wrap;justify-content:flex-end}
+  .side .foot .me,.side .foot .live{display:none}
+  main.page{padding:20px 16px 40px}
+  .ph h1{font-size:1.35rem}
+}
+
+/* ---------- surfaces ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px}
+.card + .card{margin-top:18px}
+.g3 > .card, .g2 > .card{margin-top:0}
+.card h2{margin:0;font-size:1rem;font-weight:700}
+.card .sub{margin:3px 0 14px;color:var(--muted);font-size:.86rem}
+.chead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.chead .sub{margin-bottom:0}
+.g2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:1100px){.g3{grid-template-columns:1fr}}
+@media (max-width:900px){.g2{grid-template-columns:1fr}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card);padding:9px 15px;border-radius:10px;cursor:pointer;font-weight:600;text-decoration:none;white-space:nowrap;color:var(--ink)}
+.btn:hover{background:var(--soft)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{filter:brightness(.92);background:var(--brand)}
+.btn.danger{color:var(--bad);border-color:var(--bad-line)}
+.btn.danger:hover{background:var(--bad-soft)}
+.btn.wa{background:var(--wa-soft);border-color:transparent;color:var(--wa)}
+.btn.wa:hover{filter:brightness(1.05)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--soft);color:var(--ink)}
+.btn.sm{padding:6px 11px;font-size:.84rem;border-radius:8px}
+.btn.icon{padding:6px;width:34px;height:34px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+input[type=text],input[type=search],input[type=date],select,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--brand);outline:none;box-shadow:0 0 0 3px var(--brand-soft)}
+textarea{resize:vertical;min-height:120px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row > .grow{flex:1 1 200px}
+.auto{width:auto !important}
+.note{border-radius:12px;padding:12px 14px;margin-bottom:18px;background:var(--warn-soft);color:var(--note-ink);font-weight:500}
+.note.err{background:var(--bad-soft);color:var(--bad-ink)}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+@media (max-width:1000px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;min-width:0}
+.kpi .top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-weight:600;font-size:.84rem}
+.ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--soft2);color:var(--ink2);flex:none}
+.kpi .v{font-size:1.85rem;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.kpi.hero{background:var(--brand);border-color:var(--brand);color:#fff}
+.kpi.hero .top,.kpi.hero .s{color:rgba(255,255,255,.82)}
+.kpi.hero .ic{background:rgba(255,255,255,.16);color:#fff}
+.ic.new{background:var(--new-soft);color:var(--new)} .ic.inc{background:var(--inc-soft);color:var(--inc)} .ic.fu{background:var(--fu-soft);color:var(--fu)}
+
+/* ---------- chips ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:99px;font-size:.76rem;font-weight:700;white-space:nowrap}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.t-new{background:var(--new-soft);color:var(--new)} .t-inc{background:var(--inc-soft);color:var(--inc)} .t-fu{background:var(--fu-soft);color:var(--fu)}
+.s-grey{background:var(--soft2);color:var(--muted)} .s-ok{background:var(--brand-soft);color:var(--brand-dk)}
+.s-warn{background:var(--warn-soft);color:var(--warn)} .s-bad{background:var(--bad-soft);color:var(--bad)} .s-blue{background:var(--fu-soft);color:var(--fu)}
+
+/* ---------- type picker ---------- */
+.tp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.tp button{display:flex;gap:12px;align-items:flex-start;text-align:start;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;cursor:pointer}
+.tp button b{display:block;font-weight:700}
+.tp button span.d{font-size:.82rem;color:var(--muted)}
+.tp button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-tint);box-shadow:0 0 0 3px var(--brand-soft)}
+.tp .ic{width:34px;height:34px}
+@media (max-width:560px){.tp{grid-template-columns:1fr}}
+
+/* ---------- team ---------- */
+.person{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.person:first-child{border-top:0;padding-top:0}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.85rem;flex:none;color:#fff;font-family:"Manrope","IBM Plex Sans Arabic",sans-serif}
+.person .info{flex:1;min-width:0}
+.person .info b{display:block;font-weight:700}
+.person .info span{display:block;font-size:.8rem;color:var(--muted)}
+.badge{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft2);color:var(--muted)}
+.badge.ok{background:var(--brand-soft);color:var(--brand-dk)}
+details.acc{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+details.acc summary{cursor:pointer;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px}
+details.acc summary::-webkit-details-marker{display:none}
+details.acc summary .chev{margin-inline-start:auto;transition:transform .15s}
+details.acc[open] summary .chev{transform:rotate(180deg)}
+.fld{display:block;font-size:.82rem;font-weight:700;margin:12px 0 5px}
+.acc textarea{min-height:80px}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 -20px;padding:0 20px}
+table.t{width:100%;border-collapse:separate;border-spacing:0;min-width:680px}
+.t th{text-align:start;font-weight:700;font-size:.76rem;color:var(--muted);background:var(--soft);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.t th:first-child{border-start-start-radius:10px} .t th:last-child{border-start-end-radius:10px}
+.t td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.t tr:last-child td{border-bottom:0}
+.t tbody tr:hover td{background:var(--hover)}
+.who b{display:block;font-weight:700;white-space:nowrap}
+.who span{display:block;font-size:.8rem;color:var(--muted);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph-n{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink2);direction:ltr;unicode-bidi:isolate}
+.when{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.t select{width:auto;padding:5px 8px;font-size:.84rem}
+.t input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+.acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.amt{width:120px !important;padding:6px 8px !important;direction:ltr;text-align:right}
+.empty{padding:40px 12px;text-align:center;color:var(--muted)}
+.empty svg{width:56px;height:56px;margin-bottom:6px;stroke-width:1.2;color:var(--empty)}
+.empty b{display:block;color:var(--ink);font-size:1rem;margin-bottom:2px}
+.bulk{display:flex;align-items:center;gap:10px;background:var(--bad-soft);color:var(--bad-ink);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-weight:600}
+.bulk .push{margin-inline-start:auto}
+.meter{display:flex;align-items:center;gap:8px}
+.meter .bar{flex:1;height:6px;border-radius:99px;background:var(--soft2);overflow:hidden;min-width:70px}
+.meter .bar i{display:block;height:100%;background:var(--brand);border-radius:99px}
+@media (max-width:760px){
+  .tw.cards{overflow:visible;margin:0;padding:0}
+  .cards table.t{min-width:0}
+  .cards .t thead{display:none}
+  .cards .t, .cards .t tbody{display:block}
+  .cards .t tr{display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .cards .t tr:last-child{border-bottom:0}
+  .cards .t td{display:block;padding:0;border:0;background:none !important}
+  .cards .t td.c-ph{grid-column:1;grid-row:2;justify-self:start}
+  .cards .t td.c-ty{grid-column:2;grid-row:1;justify-self:end}
+  .cards .t td.c-st{grid-column:2;grid-row:2;justify-self:end}
+  .cards .t td.c-ac{grid-column:1 / -1;margin-top:6px}
+  .cards .acts{justify-content:flex-start}
+  .cards .acts .btn{flex:1}
+}
+
+/* ---------- agent ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto}
+.tabs button{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:99px;cursor:pointer;color:var(--ink2);font-weight:600;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tabs .n{font-size:.75rem;background:var(--soft2);color:var(--ink2);border-radius:99px;padding:0 7px}
+.tabs button[aria-selected="true"] .n{background:rgba(127,127,127,.25);color:inherit}
+.alert{display:flex;align-items:center;gap:12px;background:var(--fu-soft);color:var(--alert-ink);border-radius:12px;padding:12px 16px;margin-bottom:18px;font-weight:700}
+.alert .btn{margin-inline-start:auto}
+@media (prefers-reduced-motion:no-preference){.alert{animation:pop .35s ease-out} @keyframes pop{from{transform:translateY(-6px);opacity:0}}}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.pick button{display:flex;align-items:center;gap:10px;padding:14px;font-weight:700;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;text-align:start}
+.pick button:hover{border-color:var(--brand);background:var(--brand-tint)}
+
+/* ---------- statistics ---------- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.filters label{display:flex;align-items:center;gap:6px;font-size:.84rem;color:var(--muted);font-weight:600}
+.chart{width:100%;height:auto;display:block;direction:ltr}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--ink2);font-weight:600}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:-1px}
+.tc .hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.tc .hd h3{margin:0;font-size:.98rem;font-weight:700}
+.tc .body{display:flex;gap:16px;align-items:center}
+.donut{width:118px;height:118px;flex:none;direction:ltr}
+.lg{flex:1;display:flex;flex-direction:column;gap:6px;font-size:.84rem;min-width:0}
+.lg div{display:flex;align-items:center;gap:8px}
+.lg i{width:9px;height:9px;border-radius:3px;flex:none}
+.lg b{margin-inline-start:auto;font-variant-numeric:tabular-nums}
+.foot-stat{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--soft);display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.86rem;color:var(--ink2);font-weight:600}
+.foot-stat b{font-size:1.25rem;font-weight:800;color:var(--ink)}
+
+/* ---------- dialogs ---------- */
+.back{position:fixed;inset:0;background:var(--overlay);z-index:20;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:18px;width:100%;max-width:480px;max-height:calc(100% - 20px);overflow:auto;padding:22px;box-shadow:var(--shadow-lg)}
+@media (max-width:560px){.back{align-items:flex-end;padding:0}.modal{border-radius:18px 18px 0 0;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}}
+.mh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.modal h3{margin:6px 0 0;font-size:1.2rem;font-weight:800}
+.modal .big{font-size:1.55rem;font-weight:800;letter-spacing:.02em;margin:2px 0 10px;font-variant-numeric:tabular-nums;direction:ltr;text-align:start;unicode-bidi:isolate}
+[dir="rtl"] .modal .big{text-align:right}
+.hint{display:flex;gap:10px;background:var(--soft);border-radius:10px;padding:10px 12px;font-size:.88rem;margin-bottom:14px;color:var(--ink2)}
+.hint svg{color:var(--brand);margin-top:2px}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.res button{border:1.5px solid var(--line);background:var(--card);padding:10px;border-radius:10px;cursor:pointer;font-weight:600}
+.res button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-tint);color:var(--brand-dk);box-shadow:0 0 0 3px var(--brand-soft)}
+.modal textarea{min-height:70px}
+.mf{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.mf .btn{flex:1}
+.x{border:0;background:var(--soft2);color:var(--ink);width:32px;height:32px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
+.toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+
+input[type=email],input[type=password]{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;transition:border-color .15s,box-shadow .15s}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--soft)}
+.lcard{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);padding:28px}
+.lcard .logo{padding:0 0 20px}
+.lcard h1{margin:0;font-size:1.35rem;font-weight:800}
+.lcard p.sub{margin:4px 0 18px;color:var(--muted)}
+.lcard .btn.primary{width:100%;margin-top:16px;padding:11px}
+.lcard .prefs{margin-top:18px;justify-content:space-between}
+.ferr{color:var(--bad);font-weight:600;font-size:.86rem;margin:10px 0 0}
+.boot{min-height:100vh;display:grid;place-items:center;color:var(--muted)}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.me{flex-wrap:wrap}
+.me .who2{flex:1;min-width:0}
+.me .who2 b,.me .who2 span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.addform{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.addform .full{grid-column:1 / -1}
+@media (max-width:560px){.addform{grid-template-columns:1fr}}
+.person .em{font-size:.78rem;color:var(--muted);direction:ltr;unicode-bidi:isolate}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 7h12l1 14H5z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.8 7L3 21l2-6A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8M17 6l3 3M14.5 8.5l2.5 2.5"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.4-.3z"/></symbol>
+</svg>
+<div class="boot" id="bootView"><div class="spin" aria-label="Loading"></div></div>
+
+<!-- ================= LOGIN ================= -->
+<div class="login hidden" id="loginView">
+  <div class="lcard">
+    <div class="logo"><span class="mk"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>CallDesk</div>
+    <h1 data-i="login_title"></h1>
+    <p class="sub" data-i="login_sub"></p>
+    <form id="loginForm" novalidate>
+      <label class="fld" for="lEmail" data-i="email"></label>
+      <input type="email" id="lEmail" autocomplete="username" dir="ltr" required>
+      <label class="fld" for="lPass" data-i="password"></label>
+      <input type="password" id="lPass" autocomplete="current-password" dir="ltr" required>
+      <p class="ferr hidden" id="lErr" role="alert"></p>
+      <button class="btn primary" type="submit" id="lBtn" data-i="sign_in"></button>
+    </form>
+    <div class="prefs">
+      <div class="seg" role="group" aria-label="Language / اللغة"><button data-lang="en">EN</button><button data-lang="ar">ع</button></div>
+      <button class="btn icon themeBtn"><svg class="i themeIco"><use href="#i-moon"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="shell hidden" id="shell">
+  <aside class="side">
+    <div class="logo"><span class="mk"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>CallDesk</div>
+    <nav class="nav" id="nav"></nav>
+    <div class="foot">
+      <div class="me" id="meBox"><span class="av" id="meAv"></span><div class="who2"><b id="meName"></b><span id="meRole"></span></div>
+        <button class="btn icon ghost" id="pwBtn"><svg class="i"><use href="#i-key"/></svg></button>
+        <button class="btn icon ghost" id="outBtn"><svg class="i"><use href="#i-logout"/></svg></button>
+      </div>
+      <div class="prefs">
+        <div class="seg" role="group" aria-label="Language / اللغة"><button data-lang="en">EN</button><button data-lang="ar">ع</button></div>
+        <button class="btn icon themeBtn"><svg class="i themeIco"><use href="#i-moon"/></svg></button>
+        <span class="live" id="live"><i></i><span id="liveTxt"></span></span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="page">
+    <div id="notice" class="note hidden"></div>
+
+    <!-- ================= MANAGER: OVERVIEW ================= -->
+    <section id="v_home" class="hidden">
+      <div class="ph"><div><h1 data-i="nav_home"></h1><p id="homeSub"></p></div></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="g2">
+        <div>
+          <section class="card">
+            <h2 data-i="add_title"></h2>
+            <p class="sub" data-i="add_sub"></p>
+            <div class="tp" role="group">
+              <button data-type="purchased" aria-pressed="true"><span class="ic new"><svg class="i"><use href="#i-bag"/></svg></span><div><b data-i="tp_new_b"></b><span class="d" data-i="tp_new_s"></span></div></button>
+              <button data-type="checkout" aria-pressed="false"><span class="ic inc"><svg class="i"><use href="#i-cart"/></svg></span><div><b data-i="tp_inc_b"></b><span class="d" data-i="tp_inc_s"></span></div></button>
+            </div>
+            <textarea id="numbersInput" dir="auto" data-ip="numbers_ph"></textarea>
+            <div class="row" style="margin-top:12px">
+              <select id="assignSelect" class="grow"></select>
+              <label class="btn"><svg class="i"><use href="#i-upload"/></svg><span data-i="upload_csv"></span><input type="file" id="csvFile" accept=".csv,.txt" class="hidden"></label>
+              <button class="btn primary" id="addNumbersBtn" data-i="add_btn"></button>
+            </div>
+            <p class="small muted hidden" id="addMsg" style="margin:10px 0 0"></p>
+          </section>
+          <section class="card">
+            <div class="chead" style="margin:0;align-items:center">
+              <div><h2 data-i="reset_title"></h2><p class="sub" data-i="reset_sub"></p></div>
+              <button class="btn danger" id="resetBtn"><svg class="i"><use href="#i-reset"/></svg><span data-i="reset_btn"></span></button>
+            </div>
+          </section>
+        </div>
+        <section class="card">
+          <h2 data-i="team_title"></h2>
+          <p class="sub" data-i="team_sub"></p>
+          <div id="team"></div>
+          <div class="addform">
+            <input type="text" id="aName" maxlength="40" dir="auto" data-ip="agent_name_ph">
+            <input type="email" id="aEmail" dir="ltr" data-ip="agent_email_ph" autocomplete="off">
+            <input type="text" id="aPass" dir="ltr" data-ip="agent_pw_ph" autocomplete="off" class="full">
+            <button class="btn primary full" id="addAgentBtn" data-i="add_agent"></button>
+          </div>
+          <details class="acc">
+            <summary><svg class="i" style="color:var(--wa)"><use href="#i-wa"/></svg><span data-i="wa_title"></span><svg class="i chev"><use href="#i-chev"/></svg></summary>
+            <p class="small muted" style="margin:8px 0 0" data-i="wa_sub"></p>
+            <label class="fld" for="tpl_purchased" data-i="tpl_purchased"></label><textarea id="tpl_purchased" dir="auto"></textarea>
+            <label class="fld" for="tpl_checkout" data-i="tpl_checkout"></label><textarea id="tpl_checkout" dir="auto"></textarea>
+            <label class="fld" for="tpl_followup" data-i="tpl_followup"></label><textarea id="tpl_followup" dir="auto"></textarea>
+            <button class="btn primary" id="saveTpl" style="margin-top:12px" data-i="save_msgs"></button>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <!-- ================= MANAGER: STATISTICS ================= -->
+    <section id="v_stats" class="hidden">
+      <div class="ph">
+        <div><h1 data-i="nav_stats"></h1><p id="rangeTxt"></p></div>
+        <button class="btn sm" id="exportOrders"><svg class="i"><use href="#i-download"/></svg><span data-i="export_orders"></span></button>
+      </div>
+      <div class="card" style="margin-bottom:18px;padding:14px 16px">
+        <div class="filters">
+          <select id="sAgent" class="auto"></select>
+          <div class="seg" role="group" id="presetSeg">
+            <button data-preset="today" data-i="p_today"></button>
+            <button data-preset="yesterday" data-i="p_yesterday"></button>
+            <button data-preset="7" data-i="p_7"></button>
+            <button data-preset="30" data-i="p_30"></button>
+            <button data-preset="all" data-i="p_all"></button>
+          </div>
+          <label><span data-i="from"></span> <input type="date" id="dFrom" class="auto" style="padding:6px 8px"></label>
+          <label><span data-i="to"></span> <input type="date" id="dTo" class="auto" style="padding:6px 8px"></label>
+        </div>
+      </div>
+      <div class="kpis" id="sKpis"></div>
+      <section class="card" style="margin-bottom:18px">
+        <div class="chead"><div><h2 data-i="chart_title"></h2><p class="sub" data-i="chart_sub"></p></div>
+          <div class="legend"><span><i style="background:var(--new)"></i><span data-i="lg_conf"></span></span><span><i style="background:var(--fu)"></i><span data-i="lg_fb"></span></span><span><i style="background:var(--inc)"></i><span data-i="lg_co"></span></span></div></div>
+        <div id="dayChart"></div>
+      </section>
+      <div class="g3" id="sTypes" style="margin-bottom:18px"></div>
+      <section class="card" id="sTeamCard" style="margin-bottom:18px">
+        <h2 data-i="team_cmp"></h2>
+        <p class="sub" data-i="same_period"></p>
+        <div class="tw"><table class="t">
+          <thead><tr><th data-i="th_agent"></th><th data-i="th_total"></th><th data-i="th_conf"></th><th data-i="th_fb"></th><th data-i="th_co"></th><th data-i="th_rec"></th><th data-i="th_rate"></th></tr></thead>
+          <tbody id="sTeamRows"></tbody>
+        </table></div>
+      </section>
+      <section class="card">
+        <h2 data-i="orders_title"></h2>
+        <p class="sub" data-i="orders_sub"></p>
+        <div class="tw"><table class="t">
+          <thead><tr><th data-i="th_customer"></th><th data-i="th_phone"></th><th data-i="th_agent"></th><th data-i="th_value"></th><th data-i="th_recovered"></th></tr></thead>
+          <tbody id="orderRows"></tbody>
+        </table></div>
+      </section>
+    </section>
+
+    <!-- ================= MANAGER: ALL CALLS ================= -->
+    <section id="v_calls" class="hidden">
+      <div class="ph">
+        <div><h1 data-i="nav_calls"></h1><p data-i="calls_sub"></p></div>
+        <div class="row">
+          <button class="btn sm" id="exportBtn"><svg class="i"><use href="#i-download"/></svg><span data-i="export_csv"></span></button>
+          <button class="btn sm ghost" id="cleanBtn" data-i="clean_old"></button>
+        </div>
+      </div>
+      <section class="card">
+        <div class="row" style="margin-bottom:14px">
+          <input type="search" id="fSearch" class="grow" dir="auto" data-ip="search_ph">
+          <select id="fAgent" class="auto"></select>
+          <select id="fType" class="auto"></select>
+          <select id="fStatus" class="auto"></select>
+        </div>
+        <div class="bulk hidden" id="bulkBar"><span id="bulkTxt"></span><button class="btn sm push" id="bulkDel"><svg class="i"><use href="#i-trash"/></svg><span data-i="delete_selected"></span></button><button class="btn sm ghost" id="bulkClear" data-i="cancel"></button></div>
+        <div class="tw"><table class="t">
+          <thead><tr><th style="width:34px"><input type="checkbox" id="selAll"></th><th data-i="th_customer"></th><th data-i="th_phone"></th><th data-i="th_type"></th><th data-i="th_agent"></th><th data-i="th_status"></th><th data-i="th_last"></th><th></th></tr></thead>
+          <tbody id="allRows"></tbody>
+        </table></div>
+      </section>
+    </section>
+
+    <!-- ================= AGENT ================= -->
+    <section id="v_agent" class="hidden">
+      <div class="ph"><div><h1 id="helloName"></h1><p id="helloSub"></p></div></div>
+      <div class="alert hidden" id="newAlert"><svg class="i"><use href="#i-bell"/></svg><span id="newText"></span><button class="btn sm" id="newDismiss" data-i="got_it"></button></div>
+      <div class="kpis" id="aKpis"></div>
+      <section class="card">
+        <div class="tabs" role="tablist">
+          <button role="tab" data-tab="now" aria-selected="true"><span data-i="tab_now"></span> <span class="n" id="n_now"></span></button>
+          <button role="tab" data-tab="later" aria-selected="false"><span data-i="tab_later"></span> <span class="n" id="n_later"></span></button>
+          <button role="tab" data-tab="done" aria-selected="false"><span data-i="tab_done"></span> <span class="n" id="n_done"></span></button>
+        </div>
+        <div class="tw cards"><table class="t">
+          <thead><tr><th data-i="th_customer"></th><th data-i="th_phone"></th><th data-i="th_type"></th><th data-i="th_status"></th><th></th></tr></thead>
+          <tbody id="myRows"></tbody>
+        </table></div>
+      </section>
+    </section>
+  </main>
+</div>
+
+<div class="back hidden" id="modalBack"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mName" id="modal"></div></div>
+<div class="back hidden" id="formBack" style="z-index:24"><form class="modal" id="formBox" style="max-width:420px" novalidate></form></div>
+<div class="back hidden" id="askBack" style="z-index:25"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="askTitle" style="max-width:420px">
+  <h3 id="askTitle" style="margin:0 0 8px"></h3>
+  <p id="askBody" class="muted" style="margin:0 0 12px"></p>
+  <label id="askCheckRow" class="hidden" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;cursor:pointer;font-weight:600"><input type="checkbox" id="askCheck" style="width:17px;height:17px;accent-color:var(--bad)"><span id="askCheckTxt"></span></label>
+  <div class="mf"><button class="btn" id="askNo" data-i="cancel"></button><button class="btn primary" id="askYes"></button></div>
+</div></div>
+<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  /* ======================= CONFIG ======================= */
+  const SUPABASE_URL = "https://rbknxflyoaglglgfbbiz.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_S8iCotWczyJPWlmOsRRekQ_GVlV3lRp";   // publishable key: safe to ship in the page
+  const AGENTS_FNS = ["manage-agents", "clever-service"];   // agent-management Edge Function; the first name that exists is used
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const ico = (n) => `<svg class="i"><use href="#i-${n}"/></svg>`;
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  };
+
+  const I18N = {
+    en: {
+      nav_home:"Overview", nav_stats:"Statistics", nav_calls:"All calls", nav_my:"My calls",
+      role_manager:"Manager", role_agent:"Agent", owner:"Owner", agent:"Agent", not_you:"not you?",
+      connecting:"Connecting…", live:"Live", offline:"Offline", to_dark:"Switch to dark mode", to_light:"Switch to light mode",
+      home_sub:(d,n) => `${d}. ` + (n ? `${n} customers added today.` : "No customers added yet today."),
+      k_waiting:"Waiting for a call", k_waiting_s:"Due right now across the team",
+      k_called:"Called today", k_called_s:"Customers reached or attempted",
+      k_pos:"Positive outcomes", k_pos_s:"Confirmed, recovered or satisfied today",
+      k_sched:"Scheduled", k_sched_s:"Feedback calls and retries coming up",
+      add_title:"Add numbers", add_sub:"One customer per line: phone number, then name and a note if you have them, separated by commas.",
+      tp_new_b:"New order", tp_new_s:"Confirmation call now, feedback call automatically after 3 days",
+      tp_inc_b:"Incomplete checkout", tp_inc_s:"Started checkout but didn't buy. Call to recover the order",
+      numbers_ph:"01012345678, Mohamed Ali, asked about size L\n01198765432, Sara\n01234567890",
+      upload_csv:"Upload CSV", add_btn:"Add numbers", adding:(d,n) => `Adding ${d} of ${n}…`,
+      assign_to:(n) => `Assign to ${n}`, split:"Split evenly across the team", add_agent_first:"Add an agent first",
+      no_numbers:"No phone numbers found. Put each number on its own line.",
+      added:(n) => `${n} added.`, fb_sched:(d) => ` Feedback calls are scheduled for ${d}.`, dups:(n) => ` ${n} duplicates skipped.`,
+      file_loaded:"File loaded. Review the numbers, then click Add numbers.",
+      reset_title:"Reset workspace", reset_sub:"Deletes every number and call in one go. Use it while testing.", reset_btn:"Reset",
+      reset_q:"Every number, call and order will be deleted permanently. This can't be undone.", reset_ok:"Delete everything", reset_chk:"Also remove all agents",
+      deleting:(n) => `Deleting ${n}…`, reset_done:(n) => `Workspace reset. ${n} records deleted.`,
+      team_title:"Team", team_sub:"Each agent picks their name once and it's locked to their account.",
+      linked:"Linked", not_signed:"Not signed in", team_line:(c,w) => `${c} called today · ${w} waiting`,
+      unlink:"Unlink", remove:"Remove", no_agents_hint:"Add your agents first so you can assign numbers to them.",
+      new_agent_ph:"New agent name", add_agent:"Add agent", name_exists:"That name already exists.", agent_added:(n) => `${n} added`,
+      rm_title:"Remove agent", rm_q:(n,o) => `Remove ${n} from the team?` + (o ? ` They have ${o} open calls that will stay unassigned until you reassign them.` : ""), rm_done:(n) => `${n} removed`,
+      ul_title:"Unlink account", ul_q:(n) => `Unlink ${n} from their account? They'll pick their name again next time they open the page.`,
+      wa_title:"WhatsApp messages", wa_sub:"Sent when a customer doesn't answer. Use {name} for the customer and {agent} for the agent.",
+      tpl_purchased:"New order", tpl_checkout:"Incomplete checkout", tpl_followup:"Feedback (after 3 days)", save_msgs:"Save messages", msgs_saved:"Messages saved",
+      export_orders:"Export orders", all_agents:"All agents", p_today:"Today", p_yesterday:"Yesterday", p_7:"7 days", p_30:"30 days", p_all:"All time",
+      from:"From", to:"To", whole_team:"Whole team", all_time:"All time", today:"Today", range_to:(a,b) => `${a} to ${b}`,
+      k_total:"Total calls", with_c:(n) => `With ${n} customers`, k_conf:"Order confirmation calls", n_confirmed:(n) => `${n} confirmed`,
+      k_fb:"Feedback calls", fb_sub:(a,b) => `${a} satisfied, ${b} with issues`, k_co:"Checkout calls", co_sub:(n) => `${n} orders recovered`,
+      chart_title:"Calls per day", chart_sub:"Every attempt counts as a call.", lg_conf:"Order confirmation", lg_fb:"Feedback", lg_co:"Checkout",
+      chart_empty:"No calls in this period", chart_empty_s:"Pick a wider date range or a different agent.",
+      d_confirmed:"confirmed", d_satisfied:"satisfied", d_recovered:"recovered",
+      customers_called:"Customers called", rec_revenue:"Recovered revenue", orders_recovered:"Orders recovered",
+      team_cmp:"Agent comparison", same_period:"Same period, per agent.",
+      th_agent:"Agent", th_total:"Total calls", th_conf:"Confirmation", th_fb:"Feedback", th_co:"Checkout", th_rec:"Recovered orders", th_rate:"Recovery rate",
+      no_agents:"No agents yet",
+      orders_title:"Orders recovered from checkout", orders_sub:"Add the order value if the agent didn't, and it will count toward revenue.",
+      th_customer:"Customer", th_phone:"Phone", th_value:"Value (EGP)", th_recovered:"Recovered", th_type:"Type", th_status:"Status", th_last:"Last update",
+      no_orders:"No recovered orders in this period", no_orders_s:"When an agent marks a checkout call as Order completed, it shows up here.",
+      value_saved:"Value saved", money:(n) => `EGP ${n}`,
+      calls_sub:"Every customer in the system, with their latest status.", export_csv:"Export CSV", clean_old:"Clear finished calls older than 30 days",
+      search_ph:"Search by name or phone", all_types:"All types", all_statuses:"All statuses", due_now:"Due now", scheduled:"Scheduled",
+      selected:(n) => `${n} selected`, delete_selected:"Delete selected", cancel:"Cancel", unassigned:"Unassigned",
+      attempts:(n) => `${n} attempts`, wa_sent:"WhatsApp sent", no_calls:"No calls here", no_calls_s:"Add numbers from the Overview, or change the filters.",
+      moved_to:(n) => `Moved to ${n}`, no_name:"No name", del_title:"Delete", del_q:"Delete this customer permanently?", del_q_fu:"Delete this customer and their scheduled feedback call?", deleted:"Deleted",
+      bulk_title:"Delete selected", bulk_q:(n,e) => `Delete ${n} customers permanently` + (e ? `, along with ${e} scheduled feedback calls` : "") + "?", bulk_done:(n) => `${n} deleted`,
+      clean_none:"No finished calls older than 30 days.", clean_title:"Clear old calls", clean_q:(n) => `${n} finished calls will be deleted. Export first if you need them.`, clean_ok:"Clear", clean_done:(n) => `${n} cleared`,
+      export_fail:"Export failed.",
+      who_title:"Who are you?", pick_none:"Your manager hasn't added the team yet. Your name will appear here once they do.",
+      pick_all:"Every name is already linked to an account. If one of them is you, ask your manager to unlink it.",
+      pick_link:"Pick your name once. It will be linked to your account so nobody else can use it.", pick_local:"Pick your name to see your calls. This choice is saved on this device.",
+      claim_title:"Is this you?", claim_q:(n) => `Your account will be linked to "${n}". Only the manager can change this later.`, claim_ok:"Yes, that's me",
+      name_removed:"That name was removed.", name_taken:"That name is already linked to another account.", welcome:(n) => `Welcome, ${n}`,
+      g_morning:"Good morning", g_afternoon:"Good afternoon", g_evening:"Good evening",
+      hello_sub:(n) => `You have ${n} ${n === 1 ? "customer" : "customers"} to call right now.`, caught_up:"You're all caught up.",
+      k_callnow:"Call now", k_callnow_s:"Due right now", k_done:"Done today", k_done_s:"Calls with a saved result",
+      k_pos_today:"Positive today", k_pos_today_s:"Confirmed, recovered or satisfied", k_sched_a:"Feedback calls and retries",
+      tab_now:"Call now", tab_later:"Scheduled", tab_done:"Done today", got_it:"Got it",
+      new_alert:(n) => `${n} new ${n === 1 ? "call needs" : "calls need"} your attention.`, new_toast:(n) => `${n} new ${n === 1 ? "call" : "calls"} to make`,
+      e_now:"Nothing to call right now", e_now_s:"New customers will appear here as soon as they're assigned to you.",
+      e_later:"Nothing scheduled", e_later_s:"Feedback calls and customers who didn't answer wait here until it's time.", e_done:"No calls yet today",
+      call:"Call", whatsapp:"WhatsApp", log_result:"Log result", close:"Close",
+      called_before:(n) => `Called ${n} ${n === 1 ? "time" : "times"} before`, last_note:"Last note", call_result:"Call result",
+      retry_note:(t) => `This customer will come back to "Call now" at ${t}, with a WhatsApp message ready.`,
+      amount_lbl:"Order value in EGP (optional)", amount_ph:"e.g. 450", note_ph:"Note (optional)", save_result:"Save result",
+      saved_retry:(t) => `Saved. We'll bring them back at ${t}.`, saved:(l) => `Saved: ${l}`, wrong_note:"Wrong number", cancelled_note:"Order cancelled",
+      scheduled_chip:(w) => `Scheduled · ${w}`, retry_chip:(t) => `No answer · retry ${t}`,
+      yesterday:"Yesterday", tomorrow:"Tomorrow",
+      e_perm:"You don't have permission to make changes. Ask the owner to share this page with you as a Contributor or Editor.",
+      e_quota:"Storage is full. Clear old finished calls from All calls.", e_rate:"Too many requests. Wait a few seconds and try again.", e_save:"Couldn't save. Check your connection and try again.",
+      e_view:"You have view-only access. Ask the owner to share this page with you as a Contributor or Editor.",
+      e_open:"Open this page from its claude.ai link so it can load and save data.", e_db:"The database isn't available right now. Close the page and open it again from claude.ai.",
+      e_lost:"Lost connection. Refresh the page.", e_dates:"The start date is after the end date.", sure:"Are you sure?", ok:"OK",
+      st:{pending:"Pending", no_answer:"No answer", callback:"Call back", confirmed:"Confirmed", cancelled:"Cancelled", interested:"Order completed", not_interested:"Not interested", happy:"Satisfied", issue:"Has an issue", wrong:"Wrong number", skipped:"Skipped"},
+      ty:{purchased:["New","Order confirmation","Confirm the order details, delivery address and a good delivery time."],
+          checkout:["Incomplete","Incomplete checkout","Ask what stopped them, and help them complete the order."],
+          followup:["Feedback","Feedback after 3 days","Ask if the order arrived, whether they like the product, and if there's anything to fix."]}
+    },
+    ar: {
+      nav_home:"نظرة عامة", nav_stats:"الإحصائيات", nav_calls:"كل المكالمات", nav_my:"مكالماتي",
+      role_manager:"المدير", role_agent:"الموظف", owner:"صاحب الحساب", agent:"موظف", not_you:"مش انت؟",
+      connecting:"بيتصل…", live:"متصل", offline:"مفصول", to_dark:"الوضع الداكن", to_light:"الوضع الفاتح",
+      home_sub:(d,n) => `${d}. ` + (n ? `اتضاف ${n} عميل النهارده.` : "لسه متضافش عملاء النهارده."),
+      k_waiting:"مستنيين مكالمة", k_waiting_s:"معادهم دلوقتي عند الفريق كله",
+      k_called:"اتكلموا النهارده", k_called_s:"عملاء اتكلموا أو اتحاولنا نكلمهم",
+      k_pos:"نتايج كويسة", k_pos_s:"أكدوا أو كملوا الطلب أو مبسوطين النهارده",
+      k_sched:"مجدولين", k_sched_s:"مكالمات فيدباك ومحاولات جاية",
+      add_title:"إضافة أرقام", add_sub:"كل عميل في سطر: الرقم، وبعده الاسم وملاحظة لو موجودين، مفصولين بفاصلة.",
+      tp_new_b:"أوردر جديد", tp_new_s:"مكالمة تأكيد دلوقتي، وفيدباك أوتوماتيك بعد ٣ أيام",
+      tp_inc_b:"Checkout مكملش", tp_inc_s:"بدأ الطلب ومكملش. نكلمه عشان يكمل",
+      numbers_ph:"01012345678, محمد علي, سأل عن مقاس L\n01198765432, سارة\n01234567890",
+      upload_csv:"رفع ملف CSV", add_btn:"إضافة الأرقام", adding:(d,n) => `بيضيف ${d} من ${n}…`,
+      assign_to:(n) => `وزّع على ${n}`, split:"وزّع بالتساوي على الفريق", add_agent_first:"ضيف موظف الأول",
+      no_numbers:"ملقتش أرقام. خلي كل رقم في سطر لوحده.",
+      added:(n) => `اتضاف ${n} رقم.`, fb_sched:(d) => ` مكالمات الفيدباك متجدولة يوم ${d}.`, dups:(n) => ` واتشال ${n} رقم مكرر.`,
+      file_loaded:"الملف اتقرا. راجع الأرقام واضغط إضافة.",
+      reset_title:"Reset للتجربة", reset_sub:"بيمسح كل الأرقام والمكالمات مرة واحدة. استخدمه وانت بتجرب.", reset_btn:"Reset",
+      reset_q:"كل الأرقام والمكالمات والأوردرات هتتمسح نهائياً، ومش هتقدر ترجعها.", reset_ok:"امسح كله", reset_chk:"امسح الموظفين كمان",
+      deleting:(n) => `بيمسح ${n}…`, reset_done:(n) => `اتعمل Reset. اتمسح ${n} سجل.`,
+      team_title:"الفريق", team_sub:"كل موظف بيختار اسمه مرة واحدة ويتربط بحسابه.",
+      linked:"مربوط", not_signed:"لسه مدخلش", team_line:(c,w) => `اتكلم ${c} النهارده · مستنيه ${w}`,
+      unlink:"فك الربط", remove:"حذف", no_agents_hint:"ضيف الموظفين الأول عشان توزع عليهم الأرقام.",
+      new_agent_ph:"اسم موظف جديد", add_agent:"إضافة موظف", name_exists:"الاسم ده موجود بالفعل.", agent_added:(n) => `اتضاف ${n}`,
+      rm_title:"حذف موظف", rm_q:(n,o) => `حذف ${n} من الفريق؟` + (o ? ` عنده ${o} مكالمة مفتوحة، هتفضل من غير موظف لحد ما توزعها تاني.` : ""), rm_done:(n) => `اتحذف ${n}`,
+      ul_title:"فك ربط الحساب", ul_q:(n) => `فك ربط ${n} من حسابه؟ هيختار اسمه تاني أول ما يفتح الصفحة.`,
+      wa_title:"رسايل واتساب", wa_sub:"بتتبعت لما العميل ميردش. اكتب {name} مكان اسم العميل و{agent} مكان اسم الموظف.",
+      tpl_purchased:"أوردر جديد", tpl_checkout:"Checkout مكملش", tpl_followup:"فيدباك (بعد ٣ أيام)", save_msgs:"حفظ الرسايل", msgs_saved:"الرسايل اتحفظت",
+      export_orders:"تنزيل الأوردرات", all_agents:"كل الموظفين", p_today:"النهارده", p_yesterday:"امبارح", p_7:"٧ أيام", p_30:"٣٠ يوم", p_all:"الكل",
+      from:"من", to:"لحد", whole_team:"الفريق كله", all_time:"من الأول", today:"النهارده", range_to:(a,b) => `من ${a} لحد ${b}`,
+      k_total:"كل المكالمات", with_c:(n) => `مع ${n} عميل`, k_conf:"مكالمات تأكيد الأوردر", n_confirmed:(n) => `أكد ${n}`,
+      k_fb:"مكالمات الفيدباك", fb_sub:(a,b) => `${a} مبسوطين، ${b} عندهم مشكلة`, k_co:"مكالمات الـCheckout", co_sub:(n) => `اتنفذ ${n} أوردر`,
+      chart_title:"المكالمات كل يوم", chart_sub:"كل محاولة اتصال بتتحسب مكالمة.", lg_conf:"تأكيد أوردر", lg_fb:"فيدباك", lg_co:"Checkout",
+      chart_empty:"مفيش مكالمات في الفترة دي", chart_empty_s:"جرب فترة أطول أو موظف تاني.",
+      d_confirmed:"أكدوا", d_satisfied:"مبسوطين", d_recovered:"كملوا",
+      customers_called:"عملاء اتكلموا", rec_revenue:"مبيعات", orders_recovered:"أوردرات اتنفذت",
+      team_cmp:"مقارنة الموظفين", same_period:"نفس الفترة، لكل موظف.",
+      th_agent:"الموظف", th_total:"كل المكالمات", th_conf:"تأكيد", th_fb:"فيدباك", th_co:"Checkout", th_rec:"أوردرات اتنفذت", th_rate:"نسبة التحويل",
+      no_agents:"مفيش موظفين لسه",
+      orders_title:"الأوردرات اللي اتنفذت من الـCheckout", orders_sub:"اكتب قيمة الأوردر لو الموظف مكتبهاش، وهتتحسب في المبيعات.",
+      th_customer:"العميل", th_phone:"الرقم", th_value:"القيمة (ج.م)", th_recovered:"اتنفذ", th_type:"النوع", th_status:"الحالة", th_last:"آخر تحديث",
+      no_orders:"مفيش أوردرات من الـCheckout في الفترة دي", no_orders_s:"أول ما موظف يسجل \"كمّل الطلب\" هيظهر هنا.",
+      value_saved:"القيمة اتحفظت", money:(n) => `${n} ج.م`,
+      calls_sub:"كل العملاء في السيستم وآخر حالة ليهم.", export_csv:"تنزيل CSV", clean_old:"مسح المكالمات الخلصانة الأقدم من ٣٠ يوم",
+      search_ph:"دوّر بالاسم أو الرقم", all_types:"كل الأنواع", all_statuses:"كل الحالات", due_now:"محتاج مكالمة دلوقتي", scheduled:"مجدول",
+      selected:(n) => `اتحدد ${n}`, delete_selected:"حذف المحدد", cancel:"إلغاء", unassigned:"مش متوزع",
+      attempts:(n) => `${n} محاولات`, wa_sent:"اتبعتله واتساب", no_calls:"مفيش مكالمات هنا", no_calls_s:"ضيف أرقام من نظرة عامة، أو غيّر الفلاتر.",
+      moved_to:(n) => `اتنقل لـ ${n}`, no_name:"بدون اسم", del_title:"حذف", del_q:"حذف العميل ده نهائياً؟", del_q_fu:"حذف العميل ده ومكالمة الفيدباك المجدولة بتاعته؟", deleted:"اتحذف",
+      bulk_title:"حذف المحدد", bulk_q:(n,e) => `حذف ${n} عميل نهائياً` + (e ? ` ومعاهم ${e} مكالمة فيدباك مجدولة` : "") + "؟", bulk_done:(n) => `اتحذف ${n}`,
+      clean_none:"مفيش مكالمات خلصانة أقدم من ٣٠ يوم.", clean_title:"مسح المكالمات القديمة", clean_q:(n) => `هيتمسح ${n} مكالمة خلصانة. نزّل التقرير الأول لو محتاجها.`, clean_ok:"امسح", clean_done:(n) => `اتمسح ${n}`,
+      export_fail:"التنزيل منجحش.",
+      who_title:"انت مين؟", pick_none:"المدير لسه مضافش الفريق. اسمك هيظهر هنا أول ما يضيفه.",
+      pick_all:"كل الأسماء مربوطة بحسابات. لو واحد منهم اسمك، اطلب من المدير يفك الربط.",
+      pick_link:"اختار اسمك مرة واحدة، وهيتربط بحسابك ومحدش غيرك هيقدر يستخدمه.", pick_local:"اختار اسمك عشان تظهرلك مكالماتك. الاختيار ده بيتحفظ على الجهاز ده.",
+      claim_title:"ده انت؟", claim_q:(n) => `حسابك هيتربط باسم "${n}". المدير بس هو اللي يقدر يغيّر ده بعدين.`, claim_ok:"أيوه ده أنا",
+      name_removed:"الاسم ده اتشال.", name_taken:"الاسم ده مربوط بحساب تاني.", welcome:(n) => `أهلاً ${n}`,
+      g_morning:"صباح الخير", g_afternoon:"مساء الخير", g_evening:"مساء الخير",
+      hello_sub:(n) => `عندك ${n} عميل تكلمهم دلوقتي.`, caught_up:"خلصت كل اللي عليك.",
+      k_callnow:"كلّمهم دلوقتي", k_callnow_s:"معادهم دلوقتي", k_done:"خلصت النهارده", k_done_s:"مكالمات متسجل نتيجتها",
+      k_pos_today:"نتايج كويسة", k_pos_today_s:"أكدوا أو كملوا أو مبسوطين", k_sched_a:"فيدباك ومحاولات تانية",
+      tab_now:"كلّمهم دلوقتي", tab_later:"مستنيين", tab_done:"خلصت النهارده", got_it:"تمام",
+      new_alert:(n) => `عندك ${n} مكالمة جديدة محتاجة تتعمل.`, new_toast:(n) => `عندك ${n} مكالمة جديدة`,
+      e_now:"مفيش مكالمات دلوقتي", e_now_s:"العملاء الجداد هيظهروا هنا أول ما يتوزعوا عليك.",
+      e_later:"مفيش حد مستني", e_later_s:"الفيدباك والعملاء اللي مردوش بيستنوا هنا لحد ما ييجي معادهم.", e_done:"لسه متكلمتش مع حد النهارده",
+      call:"اتصل", whatsapp:"واتساب", log_result:"سجّل النتيجة", close:"قفل",
+      called_before:(n) => `اتصلت بيه ${n} مرة قبل كده`, last_note:"آخر ملاحظة", call_result:"نتيجة المكالمة",
+      retry_note:(t) => `العميل ده هيرجعلك في "كلّمهم دلوقتي" الساعة ${t}، ورسالة الواتساب جاهزة.`,
+      amount_lbl:"قيمة الأوردر بالجنيه (اختياري)", amount_ph:"مثلاً 450", note_ph:"ملاحظة (اختياري)", save_result:"حفظ النتيجة",
+      saved_retry:(t) => `اتحفظ. هيرجعلك الساعة ${t}.`, saved:(l) => `اتحفظ: ${l}`, wrong_note:"الرقم غلط", cancelled_note:"الأوردر اتلغى",
+      scheduled_chip:(w) => `مجدولة · ${w}`, retry_chip:(t) => `مردش · تاني ${t}`,
+      yesterday:"امبارح", tomorrow:"بكرة",
+      e_perm:"مش عندك صلاحية تعدّل. اطلب من صاحب الصفحة يشاركها معاك كـContributor أو Editor.",
+      e_quota:"المساحة اتملت. امسح المكالمات القديمة الخلصانة من كل المكالمات.", e_rate:"طلبات كتير ورا بعض. استنى ثواني وجرب تاني.", e_save:"الحفظ منجحش. اتأكد من النت وجرب تاني.",
+      e_view:"انت فاتح الصفحة مشاهدة بس. اطلب من صاحبها يشاركها معاك كـContributor أو Editor.",
+      e_open:"افتح الصفحة من لينك claude.ai عشان تقدر تحمّل وتحفظ البيانات.", e_db:"قاعدة البيانات مش متاحة دلوقتي. اقفل الصفحة وافتحها تاني من claude.ai.",
+      e_lost:"الاتصال وقف. اعمل ريفريش للصفحة.", e_dates:"تاريخ البداية بعد تاريخ النهاية.", sure:"متأكد؟", ok:"تمام",
+      st:{pending:"لسه", no_answer:"مردش", callback:"يتكلم تاني", confirmed:"أكد الأوردر", cancelled:"لغى الأوردر", interested:"كمّل الطلب", not_interested:"مش مهتم", happy:"مبسوط", issue:"عنده مشكلة", wrong:"رقم غلط", skipped:"اتلغت"},
+      ty:{purchased:["جديد","تأكيد أوردر","أكد معاه تفاصيل الأوردر والعنوان وميعاد التوصيل."],
+          checkout:["Incomplete","Checkout مكملش","اسأله إيه اللي وقفه، وساعده يكمل الطلب."],
+          followup:["فيدباك","فيدباك بعد ٣ أيام","اسأله: الأوردر وصل؟ المنتج عجبه؟ فيه أي مشكلة نقدر نحلها؟"]}
+    }
+  };
+
+  Object.assign(I18N.en, {
+    login_title:"Sign in", login_sub:"Use the email and password your manager gave you.", email:"Email", password:"Password",
+    sign_in:"Sign in", signing_in:"Signing in…", bad_login:"Wrong email or password.", net_err:"Couldn't reach the server. Check your connection.",
+    no_profile:"This account isn't set up yet. Ask your manager to add you to the team.",
+    sign_out:"Sign out", change_pw:"Change password", new_pw:"New password", confirm_pw:"Confirm new password",
+    pw_short:"Password must be at least 8 characters.", pw_mismatch:"The two passwords don't match.", pw_changed:"Password changed", save:"Save",
+    team_sub:"Create an account for each agent. They sign in with that email and password.",
+    agent_name_ph:"Agent name", agent_email_ph:"Agent email", agent_pw_ph:"Password (at least 8 characters)", add_agent:"Create agent account",
+    creating:"Creating…", agent_created:(n) => `${n} can now sign in`, email_exists:"That email already has an account.", fill_all:"Fill in the name, a valid email and a password of 8+ characters.",
+    reset_pw:"Reset password", reset_pw_title:(n) => `New password for ${n}`, pw_reset_done:(n) => `Password updated for ${n}. Share it with them privately.`,
+    rename:"Rename", rename_title:"Rename agent", renamed:"Name updated", agent_name:"Name",
+    rm_q:(n,o) => `Delete ${n}'s account? They won't be able to sign in anymore.` + (o ? ` Their ${o} open calls will stay unassigned until you reassign them.` : ""),
+    func_err:"The manage-agents function isn't reachable. Check that it's deployed in Supabase.",
+    e_lost:"Live updates paused. Changes will still save; refresh if the page looks out of date."
+  });
+  Object.assign(I18N.ar, {
+    login_title:"تسجيل الدخول", login_sub:"ادخل بالإيميل والباسورد اللي المدير اداهملك.", email:"الإيميل", password:"الباسورد",
+    sign_in:"دخول", signing_in:"بيدخل…", bad_login:"الإيميل أو الباسورد غلط.", net_err:"مقدرناش نوصل للسيرفر. اتأكد من النت.",
+    no_profile:"الحساب ده لسه متظبطش. اطلب من المدير يضيفك للفريق.",
+    sign_out:"خروج", change_pw:"تغيير الباسورد", new_pw:"الباسورد الجديد", confirm_pw:"أكد الباسورد الجديد",
+    pw_short:"الباسورد لازم يبقى ٨ حروف على الأقل.", pw_mismatch:"الباسوردين مش زي بعض.", pw_changed:"الباسورد اتغير", save:"حفظ",
+    team_sub:"اعمل حساب لكل موظف، وهو يدخل بالإيميل والباسورد دول.",
+    agent_name_ph:"اسم الموظف", agent_email_ph:"إيميل الموظف", agent_pw_ph:"باسورد (٨ حروف على الأقل)", add_agent:"إنشاء حساب موظف",
+    creating:"بيعمل الحساب…", agent_created:(n) => `${n} يقدر يدخل دلوقتي`, email_exists:"الإيميل ده عليه حساب بالفعل.", fill_all:"اكتب الاسم وإيميل صحيح وباسورد ٨ حروف أو أكتر.",
+    reset_pw:"تغيير الباسورد", reset_pw_title:(n) => `باسورد جديد لـ ${n}`, pw_reset_done:(n) => `الباسورد اتغير لـ ${n}. ابعتهوله بشكل خاص.`,
+    rename:"تغيير الاسم", rename_title:"تغيير اسم الموظف", renamed:"الاسم اتغير", agent_name:"الاسم",
+    rm_q:(n,o) => `حذف حساب ${n}؟ مش هيقدر يدخل تاني.` + (o ? ` الـ${o} مكالمة المفتوحة بتاعته هتفضل من غير موظف لحد ما توزعها.` : ""),
+    func_err:"فانكشن manage-agents مش شغالة. اتأكد إنها متعملها Deploy في Supabase.",
+    e_lost:"التحديث اللحظي وقف. التعديلات بتتحفظ عادي، واعمل ريفريش لو الصفحة شكلها قديم."
+  });
+
+  let LANG = store.get("calls.lang") === "ar" ? "ar" : "en";
+  let THEME = store.get("calls.theme") === "dark" ? "dark" : "light";
+  const t = (k, ...a) => { const v = I18N[LANG][k] ?? I18N.en[k]; return typeof v === "function" ? v(...a) : (v ?? k); };
+  const loc = () => LANG === "ar" ? "ar-EG" : "en-US";
+  const stL = (s) => (I18N[LANG].st[s] || I18N[LANG].st.pending);
+
+  /* ======================= DATA VOCABULARY ======================= */
+  const HOUR = 36e5, DAY = 864e5, FOLLOWUP_DAYS = 3, RETRY_HOURS = 2;
+  const ST_CLS = {pending:"s-grey", no_answer:"s-warn", callback:"s-blue", confirmed:"s-ok", cancelled:"s-bad", interested:"s-ok", not_interested:"s-grey", happy:"s-ok", issue:"s-bad", wrong:"s-bad", skipped:"s-grey"};
+  const FINAL = ["confirmed","cancelled","interested","not_interested","happy","issue","wrong","skipped"];
+  const POSITIVE = ["confirmed","interested","happy"];
+  const SALE = ["confirmed","interested"];
+  const TYPES = {
+    purchased:{c:"t-new", ic:"bag", icc:"new", results:["confirmed","cancelled","no_answer","callback","wrong"]},
+    checkout:{c:"t-inc", ic:"cart", icc:"inc", results:["interested","not_interested","no_answer","callback","wrong"]},
+    followup:{c:"t-fu", ic:"chat", icc:"fu", results:["happy","issue","no_answer","callback","wrong"]}
+  };
+  const tyTag = (k) => I18N[LANG].ty[k][0], tyName = (k) => I18N[LANG].ty[k][1], tyHint = (k) => I18N[LANG].ty[k][2];
+  const RES_COLOR = {confirmed:"var(--new)", interested:"var(--new)", happy:"var(--new)", no_answer:"var(--warn)", callback:"var(--fu)", cancelled:"var(--bad)", issue:"var(--bad)", wrong:"var(--axis)", not_interested:"var(--empty)"};
+  const DEFAULT_TPL = {
+    purchased:"أهلاً {name} 👋 معاك {agent} من خدمة العملاء. حاولنا نكلمك عشان نأكد الأوردر بتاعك. ممكن تأكدلنا العنوان وميعاد مناسب للتوصيل؟",
+    checkout:"أهلاً {name} 👋 معاك {agent} من خدمة العملاء. لاحظنا إن طلبك مكملش، لو فيه أي حاجة وقفتك أو محتاج مساعدة تكمل الطلب احنا موجودين.",
+    followup:"أهلاً {name} 👋 معاك {agent}. حبينا نطمن إن الأوردر وصلك والمنتج عاجبك. لو عندك أي ملاحظة قولنا ونحلها فوراً."
+  };
+  const AV_COLORS = ["#0B7A5F","#4F46E5","#C2410C","#0E7490","#9333EA","#B45309","#BE185D","#1D4ED8"];
+
+  const S = {
+    sb:null, session:null, me:null,            // me = profile row {id,name,email,role}
+    calls:[], agents:[], tpl:Object.assign({}, DEFAULT_TPL),
+    view: (["home","stats","calls"].includes(store.get("calls.view")) ? store.get("calls.view") : "home"),
+    tab:"now", filter:{agent:"",status:"",type:"",q:""}, addType:"purchased",
+    seen:new Set(), primed:false, loaded:false, newCount:0, live:false,
+    modalId:null, draftStatus:null, sel:new Set(), visible:[],
+    preset:"today", range:null, statAgent:"", ordersNow:[], noticeKey:null, channel:null
+  };
+  const isManager = () => S.me && S.me.role === "manager";
+
+  /* ---------- row mapping (database snake_case <-> app camelCase) ---------- */
+  const COLS = {agentId:"agent_id", followupId:"followup_id", parentId:"parent_id", externalId:"external_id", createdAt:"created_at", updatedAt:"updated_at", calledAt:"called_at", retryAt:"retry_at", dueAt:"due_at", waAt:"wa_at"};
+  const num = (v) => v === null || v === undefined ? null : Number(v);
+  function fromRow(r){
+    return {id:r.id, type:r.type, phone:r.phone, name:r.name||"", note:r.note||"", agentId:r.agent_id, status:r.status, result:r.result||"", attempts:r.attempts||0,
+      amount: r.amount === null ? null : Number(r.amount), log: Array.isArray(r.log) ? r.log : [], followupId:r.followup_id, parentId:r.parent_id,
+      createdAt:num(r.created_at), updatedAt:num(r.updated_at), calledAt:num(r.called_at), retryAt:num(r.retry_at), dueAt:num(r.due_at), waAt:num(r.wa_at)};
+  }
+  function toRow(o){ const r = {}; Object.keys(o).forEach(k => { r[COLS[k] || k] = o[k]; }); return r; }
+  async function upd(id, patch){ const { error } = await S.sb.from("calls").update(toRow(patch)).eq("id", id); if (error) throw error; }
+
+  /* ---------- helpers ---------- */
+  const now = () => Date.now();
+  const sod = () => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); };
+  const isToday = (x) => typeof x === "number" && x >= sod() && x < sod() + DAY;
+  const fmt = (n) => Number(n||0).toLocaleString(loc());
+  const money = (n) => t("money", Number(n||0).toLocaleString(loc(),{maximumFractionDigits:0}));
+  const pct = (a,b) => b ? Math.round(a*100/b) : 0;
+  const pctS = (n) => LANG === "ar" ? fmt(n) + "٪" : n + "%";
+  const time = (x) => new Date(x).toLocaleTimeString(loc(),{hour:"numeric",minute:"2-digit"});
+  const dateL = (x, o) => new Date(x).toLocaleDateString(loc(), o);
+  const when = (x) => {
+    if (!x) return "";
+    const sep = LANG === "ar" ? "، " : ", ";
+    if (isToday(x)) return t("today") + sep + time(x);
+    if (x >= sod() - DAY && x < sod()) return t("yesterday") + sep + time(x);
+    if (x >= sod() + DAY && x < sod() + 2*DAY) return t("tomorrow") + sep + time(x);
+    return dateL(x, {weekday:"short", month:"short", day:"numeric"});
+  };
+  const cleanPhone = (p) => String(p).replace(/[^\d+]/g,"");
+  const waNumber = (p) => { let d = cleanPhone(p).replace(/^\+/,""); if (d.startsWith("00")) d = d.slice(2); if (/^01\d{9}$/.test(d)) d = "2" + d; return d; };
+  const typeOf = (x) => TYPES[x && x.type] ? x.type : "checkout";
+  const agentName = (id) => (id && S.me && id === S.me.id) ? S.me.name : ((S.agents.find(a => a.id === id) || {}).name || "");
+  const initials = (n) => String(n||"?").trim().split(/\s+/).slice(0,2).map(w => w[0]).join("").toUpperCase() || "?";
+  const avColor = (id) => { let h = 0; String(id||"").split("").forEach(c => h = (h*31 + c.charCodeAt(0)) >>> 0); return AV_COLORS[h % AV_COLORS.length]; };
+  const avatar = (a) => `<span class="av" style="background:${avColor(a.id)}">${esc(initials(a.name))}</span>`;
+  const greet = () => { const h = new Date().getHours(); return t(h < 12 ? "g_morning" : h < 17 ? "g_afternoon" : "g_evening"); };
+  const toNum = (v) => Number(String(v||"").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^\d.]/g,""));
+  const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c === "x" ? r : (r&3|8)).toString(16); }));
+
+  function nextAt(x){
+    if (x.status === "pending") return x.dueAt || x.createdAt || 0;
+    if (x.status === "no_answer") return x.retryAt || x.calledAt || 0;
+    if (x.status === "callback") return x.calledAt || 0;
+    return null;
+  }
+  const actionable = (x) => { const n = nextAt(x); return n !== null && n <= now(); };
+  const waiting = (x) => { const n = nextAt(x); return n !== null && n > now(); };
+  const noticeKey = (x) => x.id + ":" + x.status + ":" + (nextAt(x) || 0);
+  const typeChip = (x) => { const k = typeOf(x); return `<span class="chip ${TYPES[k].c}">${esc(tyTag(k))}</span>`; };
+  function statusChip(x){
+    if (x.status === "pending" && waiting(x)) return `<span class="chip s-blue">${esc(t("scheduled_chip", when(x.dueAt)))}</span>`;
+    if (x.status === "no_answer" && waiting(x)) return `<span class="chip s-warn">${esc(t("retry_chip", time(x.retryAt)))}</span>`;
+    return `<span class="chip ${ST_CLS[x.status] || "s-grey"}">${esc(stL(x.status))}</span>`;
+  }
+  function waLink(x){
+    const msg = (S.tpl[typeOf(x)] || DEFAULT_TPL[typeOf(x)]).replace(/\{name\}/g, x.name || "").replace(/\{agent\}/g, agentName(x.agentId) || "")
+      .replace(/ +/g," ").replace(/ ([👋،,.])/g,"$1").trim();
+    return `https://wa.me/${waNumber(x.phone)}?text=${encodeURIComponent(msg)}`;
+  }
+  const emptyRow = (cols, title, text, icon) => `<tr><td colspan="${cols}"><div class="empty">${ico(icon || "inbox")}<b>${esc(title)}</b>${esc(text || "")}</div></td></tr>`;
+  const kpi = (label, value, sub, icon, cls) => `<div class="kpi ${cls||""}"><div class="top"><span>${esc(label)}</span><span class="ic ${icon[1]||""}">${ico(icon[0])}</span></div><div class="v">${value}</div><div class="s">${esc(sub||"")}</div></div>`;
+
+  let toastT;
+  function toast(m){ const el = $("toast"); el.textContent = m; el.classList.remove("hidden"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.add("hidden"), 3200); }
+  function notice(key, err){ S.noticeKey = key ? [key, err] : null; const n = $("notice"); if (!key){ n.classList.add("hidden"); return; } n.textContent = t(key); n.classList.toggle("err", !!err); n.classList.remove("hidden"); }
+  function writeErr(e){
+    console.error(e);
+    const m = String((e && (e.message || e.error_description)) || "");
+    if (/Failed to fetch|NetworkError|network/i.test(m)) toast(t("net_err"));
+    else if (/row-level security|permission|Agents can only/i.test(m)) toast(t("e_perm"));
+    else toast(t("e_save"));
+  }
+
+  /* ---------- dialogs ---------- */
+  let askResolve = null;
+  function ask(body, o){
+    o = o || {};
+    $("askTitle").textContent = o.title || t("sure");
+    $("askBody").textContent = body;
+    const y = $("askYes"); y.textContent = o.ok || t("ok");
+    y.style.background = o.danger === false ? "" : "var(--bad)"; y.style.borderColor = o.danger === false ? "" : "var(--bad)";
+    $("askCheckRow").classList.toggle("hidden", !o.check); $("askCheck").checked = false;
+    if (o.check) $("askCheckTxt").textContent = o.check;
+    $("askBack").classList.remove("hidden"); setTimeout(() => $("askNo").focus(), 0);
+    return new Promise(r => { askResolve = r; });
+  }
+  function answer(v){ $("askBack").classList.add("hidden"); S.askChecked = $("askCheck").checked; const r = askResolve; askResolve = null; if (r) r(v); }
+
+  // small form dialog: resolves with {fieldId: value} or null when cancelled; validate() may return an error string
+  let formResolve = null, formValidate = null;
+  function formDialog(title, fields, okLabel, validate){
+    $("formBox").innerHTML = `<h3 style="margin:0 0 6px">${esc(title)}</h3>` +
+      fields.map(f => `<label class="fld" for="fd_${f.id}">${esc(f.label)}</label><input id="fd_${f.id}" type="${f.type||"text"}" dir="${f.dir||"auto"}" value="${esc(f.value||"")}" autocomplete="${f.ac||"off"}">`).join("") +
+      `<p class="ferr hidden" id="fdErr"></p><div class="mf"><button type="button" class="btn" id="fdNo">${esc(t("cancel"))}</button><button type="submit" class="btn primary" id="fdYes">${esc(okLabel)}</button></div>`;
+    formValidate = (vals) => validate ? validate(vals) : null;
+    S.formFields = fields.map(f => f.id);
+    $("formBack").classList.remove("hidden");
+    setTimeout(() => { const first = $("fd_" + fields[0].id); if (first) first.focus(); }, 0);
+    return new Promise(r => { formResolve = r; });
+  }
+  function closeForm(v){ $("formBack").classList.add("hidden"); const r = formResolve; formResolve = null; if (r) r(v); }
+  $("formBox").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const vals = {}; (S.formFields||[]).forEach(id => vals[id] = $("fd_" + id).value);
+    const err = formValidate && formValidate(vals);
+    if (err){ $("fdErr").textContent = err; $("fdErr").classList.remove("hidden"); return; }
+    closeForm(vals);
+  });
+
+  function parseLines(text){
+    const out = [];
+    text.split(/\r?\n/).forEach(line => {
+      const parts = line.split(/[,\t;،]/).map(s => s.trim()).filter(Boolean);
+      if (!parts.length) return;
+      const i = parts.findIndex(p => /^\+?[\d\s\-()]{7,}$/.test(p) && cleanPhone(p).replace("+","").length >= 7);
+      if (i === -1) return;
+      const rest = parts.filter((_,j) => j !== i);
+      out.push({ phone: cleanPhone(parts[i]), name: rest[0] || "", note: rest.slice(1).join(" - ") });
+    });
+    return out;
+  }
+
+  /* ======================= STATIC TEXT / PREFS ======================= */
+  function applyStatic(){
+    const h = document.documentElement;
+    h.lang = LANG; h.dir = LANG === "ar" ? "rtl" : "ltr"; h.setAttribute("data-theme", THEME);
+    document.querySelectorAll("[data-i]").forEach(el => { el.textContent = t(el.dataset.i); });
+    document.querySelectorAll("[data-ip]").forEach(el => { el.placeholder = t(el.dataset.ip); });
+    document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
+    const lbl = THEME === "dark" ? t("to_light") : t("to_dark");
+    document.querySelectorAll(".themeBtn").forEach(b => { b.setAttribute("aria-label", lbl); b.title = lbl; });
+    document.querySelectorAll(".themeIco").forEach(i => { i.innerHTML = `<use href="#i-${THEME === "dark" ? "sun" : "moon"}"/>`; });
+    $("pwBtn").title = t("change_pw"); $("pwBtn").setAttribute("aria-label", t("change_pw"));
+    $("outBtn").title = t("sign_out"); $("outBtn").setAttribute("aria-label", t("sign_out"));
+    $("liveTxt").textContent = S.live ? t("live") : t("connecting");
+    $("fType").innerHTML = `<option value="">${t("all_types")}</option>` + Object.keys(TYPES).map(k => `<option value="${k}">${esc(tyTag(k))}</option>`).join("");
+    $("fType").value = S.filter.type;
+    $("fStatus").innerHTML = `<option value="">${t("all_statuses")}</option><option value="now">${t("due_now")}</option><option value="later">${t("scheduled")}</option>` +
+      ["no_answer","callback","confirmed","cancelled","interested","not_interested","happy","issue","wrong","skipped"].map(s => `<option value="${s}">${esc(stL(s))}</option>`).join("");
+    $("fStatus").value = S.filter.status;
+    if (S.noticeKey) notice(S.noticeKey[0], S.noticeKey[1]);
+  }
+
+  /* ======================= AUTH ======================= */
+  function showOnly(which){
+    $("bootView").classList.toggle("hidden", which !== "boot");
+    $("loginView").classList.toggle("hidden", which !== "login");
+    $("shell").classList.toggle("hidden", which !== "app");
+  }
+  async function signIn(e){
+    e.preventDefault();
+    const email = $("lEmail").value.trim(), password = $("lPass").value;
+    const err = $("lErr"), btn = $("lBtn");
+    err.classList.add("hidden");
+    if (!email || !password){ err.textContent = t("bad_login"); err.classList.remove("hidden"); return; }
+    btn.disabled = true; btn.textContent = t("signing_in");
+    const { data, error } = await S.sb.auth.signInWithPassword({ email, password });
+    btn.disabled = false; btn.textContent = t("sign_in");
+    if (error){ err.textContent = /fetch|network/i.test(error.message) ? t("net_err") : t("bad_login"); err.classList.remove("hidden"); return; }
+    $("lPass").value = "";
+    await startSession(data.session);
+  }
+  async function signOut(){
+    if (S.channel){ try { await S.sb.removeChannel(S.channel); } catch(e){} S.channel = null; }
+    await S.sb.auth.signOut();
+    Object.assign(S, {session:null, me:null, calls:[], agents:[], loaded:false, primed:false, seen:new Set(), newCount:0, live:false});
+    document.title = "CallDesk";
+    showOnly("login");
+  }
+  async function changePassword(){
+    const v = await formDialog(t("change_pw"), [
+      {id:"p1", label:t("new_pw"), type:"password", dir:"ltr", ac:"new-password"},
+      {id:"p2", label:t("confirm_pw"), type:"password", dir:"ltr", ac:"new-password"}
+    ], t("save"), (x) => x.p1.length < 8 ? t("pw_short") : x.p1 !== x.p2 ? t("pw_mismatch") : null);
+    if (!v) return;
+    const { error } = await S.sb.auth.updateUser({ password: v.p1 });
+    if (error) writeErr(error); else toast(t("pw_changed"));
+  }
+
+  async function startSession(session){
+    S.session = session;
+    const { data: prof, error } = await S.sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
+    if (error || !prof){
+      await S.sb.auth.signOut();
+      showOnly("login");
+      $("lErr").textContent = error ? t("net_err") : t("no_profile"); $("lErr").classList.remove("hidden");
+      return;
+    }
+    S.me = prof;
+    showOnly("app");
+    await loadAll();
+    subscribe();
+  }
+
+  /* ======================= DATA ======================= */
+  async function loadCalls(){
+    const { data, error } = await S.sb.from("calls").select("*").order("created_at", { ascending:false }).limit(3000);
+    if (error) throw error;
+    S.calls = data.map(fromRow);
+  }
+  async function loadProfiles(){
+    const { data, error } = await S.sb.from("profiles").select("*").order("created_at", { ascending:true });
+    if (error) throw error;
+    const mine = data.find(p => p.id === S.me.id); if (mine) S.me = mine;
+    S.agents = data.filter(p => p.role === "agent").map(p => ({id:p.id, name:p.name, email:p.email}));
+  }
+  async function loadSettings(){
+    const { data } = await S.sb.from("settings").select("*").eq("key","templates").maybeSingle();
+    S.tpl = Object.assign({}, DEFAULT_TPL, data && data.value ? data.value : {});
+  }
+  async function loadAll(){
+    try { await Promise.all([loadCalls(), loadProfiles(), loadSettings()]); S.loaded = true; }
+    catch(e){ writeErr(e); }
+    checkNew(); render();
+  }
+  const pending = {};
+  function refetch(what){
+    clearTimeout(pending[what]);
+    pending[what] = setTimeout(async () => {
+      try {
+        if (what === "calls") await loadCalls(); else if (what === "profiles") await loadProfiles(); else await loadSettings();
+        checkNew();
+        if (!askResolve && !formResolve){ if (S.modalId) { renderNav(); if (!isManager()) renderAgent(); } else render(); }
+      } catch(e){ console.error(e); }
+    }, 250);
+  }
+  function subscribe(){
+    if (S.channel) return;
+    S.channel = S.sb.channel("calldesk")
+      .on("postgres_changes", {event:"*", schema:"public", table:"calls"}, () => refetch("calls"))
+      .on("postgres_changes", {event:"*", schema:"public", table:"profiles"}, () => refetch("profiles"))
+      .on("postgres_changes", {event:"*", schema:"public", table:"settings"}, () => refetch("settings"))
+      .subscribe((status) => {
+        S.live = status === "SUBSCRIBED";
+        $("live").classList.toggle("on", S.live);
+        $("liveTxt").textContent = S.live ? t("live") : t("connecting");
+        if (S.live){ if (S.noticeKey && S.noticeKey[0] === "e_lost") notice(null); refetch("calls"); }
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") notice("e_lost");
+      });
+  }
+
+  let fnName = null;
+  async function agentsFn(body){
+    let data, error;
+    for (const name of (fnName ? [fnName] : AGENTS_FNS)){
+      ({ data, error } = await S.sb.functions.invoke(name, { body }));
+      const status = error && error.context && error.context.status;
+      if (status === 404) continue;          // no function with this name, try the next one
+      fnName = name; break;
+    }
+    if (error){
+      let msg = "";
+      try { const j = await error.context.json(); msg = j && j.error; } catch(e){}
+      if (!msg) throw new Error("func");
+      const err = new Error(msg); err.code = msg; throw err;
+    }
+    return data;
+  }
+  const fnErr = (e) => {
+    const c = e && (e.code || e.message);
+    if (c === "email_exists") toast(t("email_exists"));
+    else if (c === "weak_password") toast(t("pw_short"));
+    else if (c === "func" ) toast(t("func_err"));
+    else writeErr(e);
+  };
+
+  /* ================= NAV ================= */
+  function renderNav(){
+    let items;
+    if (isManager()) items = [["home","nav_home","home"],["stats","nav_stats","chart"],["calls","nav_calls","list", S.calls.filter(actionable).length]];
+    else items = [["agent","nav_my","phone", S.calls.filter(x => x.agentId === S.me.id && actionable(x)).length]];
+    const cur = isManager() ? S.view : "agent";
+    $("nav").innerHTML = items.map(([k,l,ic,c]) => `<button data-view="${k}" ${k === cur ? 'aria-current="page"' : ""}>${ico(ic)}${esc(t(l))}${c ? `<span class="cnt">${fmt(c)}</span>` : ""}</button>`).join("");
+    $("meAv").style.background = isManager() ? "#344054" : avColor(S.me.id);
+    $("meAv").textContent = initials(S.me.name);
+    $("meName").textContent = S.me.name;
+    $("meRole").textContent = isManager() ? t("role_manager") : t("agent");
+  }
+
+  /* ================= MANAGER: OVERVIEW ================= */
+  function renderHome(){
+    const c = S.calls;
+    const due = c.filter(actionable).length, called = c.filter(x => isToday(x.calledAt)).length;
+    const good = c.filter(x => POSITIVE.includes(x.status) && isToday(x.calledAt)).length, later = c.filter(waiting).length;
+    const added = c.filter(x => isToday(x.createdAt) && typeOf(x) !== "followup").length;
+    $("homeSub").textContent = t("home_sub", dateL(now(),{weekday:"long", month:"long", day:"numeric"}), added ? fmt(added) : 0);
+    $("kpis").innerHTML =
+      kpi(t("k_waiting"), fmt(due), t("k_waiting_s"), ["phone"], "hero") +
+      kpi(t("k_called"), fmt(called), t("k_called_s"), ["check"]) +
+      kpi(t("k_pos"), fmt(good), t("k_pos_s"), ["bag","new"]) +
+      kpi(t("k_sched"), fmt(later), t("k_sched_s"), ["clock","fu"]);
+    $("team").innerHTML = S.agents.map(a => {
+      const m = c.filter(x => x.agentId === a.id);
+      return `<div class="person">${avatar(a)}<div class="info"><b>${esc(a.name)}</b><span class="em">${esc(a.email || "")}</span>
+        <span>${esc(t("team_line", fmt(m.filter(x => isToday(x.calledAt)).length), fmt(m.filter(actionable).length)))}</span></div>
+        <button class="btn icon ghost" data-rename="${esc(a.id)}" title="${esc(t("rename"))}" aria-label="${esc(t("rename"))}">${ico("edit")}</button>
+        <button class="btn icon ghost" data-pw="${esc(a.id)}" title="${esc(t("reset_pw"))}" aria-label="${esc(t("reset_pw"))}">${ico("key")}</button>
+        <button class="btn icon ghost" data-del-agent="${esc(a.id)}" title="${esc(t("remove"))}" aria-label="${esc(t("remove"))} ${esc(a.name)}">${ico("trash")}</button></div>`;
+    }).join("") || `<p class="muted small" style="margin:0">${esc(t("no_agents_hint"))}</p>`;
+    const aSel = $("assignSelect"), prev = aSel.value;
+    aSel.innerHTML = S.agents.length
+      ? S.agents.map(a => `<option value="${esc(a.id)}">${esc(t("assign_to", a.name))}</option>`).join("") + (S.agents.length > 1 ? `<option value="__split">${esc(t("split"))}</option>` : "")
+      : `<option value="">${esc(t("add_agent_first"))}</option>`;
+    if ([...aSel.options].some(o => o.value === prev)) aSel.value = prev;
+    if (!(document.activeElement && /^tpl_/.test(document.activeElement.id))) Object.keys(TYPES).forEach(k => { $("tpl_" + k).value = S.tpl[k] || DEFAULT_TPL[k]; });
+  }
+  async function addAgent(){
+    const name = $("aName").value.trim(), email = $("aEmail").value.trim().toLowerCase(), password = $("aPass").value;
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 8){ toast(t("fill_all")); return; }
+    const btn = $("addAgentBtn"); btn.disabled = true; btn.textContent = t("creating");
+    try {
+      await agentsFn({action:"create", name, email, password});
+      $("aName").value = ""; $("aEmail").value = ""; $("aPass").value = "";
+      toast(t("agent_created", name)); await loadProfiles(); render();
+    } catch(e){ fnErr(e); }
+    btn.disabled = false; btn.textContent = t("add_agent");
+  }
+  async function removeAgent(id){
+    const a = S.agents.find(x => x.id === id); if (!a) return;
+    const open = S.calls.filter(x => x.agentId === id && (actionable(x) || waiting(x))).length;
+    if (!await ask(t("rm_q", a.name, open ? fmt(open) : 0), {title:t("rm_title"), ok:t("remove")})) return;
+    try { await agentsFn({action:"delete", id}); toast(t("rm_done", a.name)); await Promise.all([loadProfiles(), loadCalls()]); render(); } catch(e){ fnErr(e); }
+  }
+  async function resetAgentPw(id){
+    const a = S.agents.find(x => x.id === id); if (!a) return;
+    const v = await formDialog(t("reset_pw_title", a.name), [{id:"p", label:t("new_pw"), dir:"ltr"}], t("save"), (x) => x.p.length < 8 ? t("pw_short") : null);
+    if (!v) return;
+    try { await agentsFn({action:"password", id, password:v.p}); toast(t("pw_reset_done", a.name)); } catch(e){ fnErr(e); }
+  }
+  async function renameAgent(id){
+    const a = S.agents.find(x => x.id === id); if (!a) return;
+    const v = await formDialog(t("rename_title"), [{id:"n", label:t("agent_name"), value:a.name}], t("save"), (x) => x.n.trim() ? null : t("fill_all"));
+    if (!v) return;
+    try { const { error } = await S.sb.from("profiles").update({name: v.n.trim()}).eq("id", id); if (error) throw error; toast(t("renamed")); await loadProfiles(); render(); } catch(e){ writeErr(e); }
+  }
+  async function saveTemplates(){
+    const tp = {}; Object.keys(TYPES).forEach(k => tp[k] = $("tpl_" + k).value.trim() || DEFAULT_TPL[k]);
+    const { error } = await S.sb.from("settings").upsert({key:"templates", value:tp});
+    if (error) writeErr(error); else { S.tpl = Object.assign({}, DEFAULT_TPL, tp); toast(t("msgs_saved")); }
+  }
+  async function addNumbers(text){
+    const target = $("assignSelect").value, msg = $("addMsg");
+    if (!target){ toast(t("add_agent_first")); return; }
+    const parsed = parseLines(text);
+    if (!parsed.length){ msg.textContent = t("no_numbers"); msg.classList.remove("hidden"); return; }
+    const type = S.addType;
+    const open = new Set(S.calls.filter(x => typeOf(x) === type && !FINAL.includes(x.status)).map(x => x.phone));
+    const seen = new Set(), fresh = []; let dup = 0;
+    parsed.forEach(p => { if (open.has(p.phone) || seen.has(p.phone)) { dup++; return; } seen.add(p.phone); fresh.push(p); });
+    const rows = [], tm = now();
+    fresh.forEach((p, i) => {
+      const agent_id = target === "__split" ? S.agents[i % S.agents.length].id : target;
+      const base = {phone:p.phone, name:p.name, note:p.note, agent_id, status:"pending", created_at:tm + i, updated_at:tm};
+      if (type === "purchased"){
+        const pid = uuid(), fid = uuid();
+        rows.push(Object.assign({}, base, {id:pid, type:"purchased", followup_id:fid}));
+        rows.push(Object.assign({}, base, {id:fid, type:"followup", parent_id:pid, due_at: tm + FOLLOWUP_DAYS*DAY}));
+      } else rows.push(Object.assign({}, base, {id:uuid(), type:"checkout"}));
+    });
+    const btn = $("addNumbersBtn"); btn.disabled = true; btn.textContent = t("adding", fmt(fresh.length), fmt(fresh.length));
+    let ok = true;
+    for (let i = 0; i < rows.length && ok; i += 500){
+      const { error } = await S.sb.from("calls").insert(rows.slice(i, i + 500));
+      if (error){ ok = false; writeErr(error); }
+    }
+    btn.disabled = false; btn.textContent = t("add_btn");
+    if (!ok) return;
+    $("numbersInput").value = "";
+    msg.textContent = t("added", fmt(fresh.length)) + (type === "purchased" && fresh.length ? t("fb_sched", dateL(tm + FOLLOWUP_DAYS*DAY,{weekday:"long", month:"short", day:"numeric"})) : "") + (dup ? t("dups", fmt(dup)) : "");
+    msg.classList.remove("hidden");
+    refetch("calls");
+  }
+  async function resetAll(){
+    if (!await ask(t("reset_q"), {title:t("reset_title"), ok:t("reset_ok"), check:t("reset_chk")})) return;
+    const alsoAgents = S.askChecked, btn = $("resetBtn"); btn.disabled = true;
+    try {
+      const n = S.calls.length;
+      const { error } = await S.sb.from("calls").delete().not("id", "is", null);
+      if (error) throw error;
+      if (alsoAgents){ for (const a of S.agents){ btn.textContent = t("deleting", a.name); await agentsFn({action:"delete", id:a.id}); } }
+      S.sel.clear(); toast(t("reset_done", fmt(n)));
+      await Promise.all([loadCalls(), loadProfiles()]); render();
+    } catch(e){ fnErr(e); }
+    btn.disabled = false; btn.innerHTML = ico("reset") + `<span data-i="reset_btn">${esc(t("reset_btn"))}</span>`;
+  }
+
+  /* ================= MANAGER: ALL CALLS ================= */
+  function renderCalls(){
+    const fS = $("fAgent"), pv = fS.value;
+    fS.innerHTML = `<option value="">${esc(t("all_agents"))}</option>` + S.agents.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("");
+    fS.value = [...fS.options].some(o => o.value === pv) ? pv : "";
+    const f = S.filter, q = f.q.trim().toLowerCase();
+    const rows = S.calls.filter(x =>
+      (!f.agent || x.agentId === f.agent) && (!f.type || typeOf(x) === f.type) &&
+      (!f.status || (f.status === "now" ? actionable(x) : f.status === "later" ? waiting(x) : x.status === f.status)) &&
+      (!q || (x.phone||"").includes(cleanPhone(q) || q) || (x.name||"").toLowerCase().includes(q))
+    ).slice(0,500);
+    S.visible = rows.map(x => x.id);
+    [...S.sel].forEach(id => { if (!S.calls.some(c => c.id === id)) S.sel.delete(id); });
+    const opts = (sel) => S.agents.map(a => `<option value="${esc(a.id)}"${a.id===sel?" selected":""}>${esc(a.name)}</option>`).join("") + (S.agents.some(a => a.id === sel) ? "" : `<option selected value="">${esc(t("unassigned"))}</option>`);
+    $("allRows").innerHTML = rows.map(x => `<tr>
+      <td><input type="checkbox" data-sel="${esc(x.id)}" ${S.sel.has(x.id) ? "checked" : ""}></td>
+      <td class="who" dir="auto"><b>${esc(x.name || t("no_name"))}</b>${(x.result || x.note) ? `<span title="${esc(x.result || x.note)}">${esc(x.result || x.note)}</span>` : ""}</td>
+      <td class="ph-n">${esc(x.phone)}</td>
+      <td>${typeChip(x)}</td>
+      <td><select data-reassign="${esc(x.id)}">${opts(x.agentId)}</select></td>
+      <td>${statusChip(x)}${(x.attempts > 1 || x.waAt) ? `<div class="when" style="margin-top:3px">${x.attempts > 1 ? esc(t("attempts", fmt(x.attempts))) : ""}${x.attempts > 1 && x.waAt ? " · " : ""}${x.waAt ? esc(t("wa_sent")) : ""}</div>` : ""}</td>
+      <td class="when">${esc(when(x.calledAt || x.createdAt))}</td>
+      <td><button class="btn icon ghost" data-del-call="${esc(x.id)}" aria-label="${esc(t("del_title"))}" title="${esc(t("del_title"))}">${ico("trash")}</button></td>
+    </tr>`).join("") || emptyRow(8, t("no_calls"), t("no_calls_s"));
+    renderBulk();
+  }
+  function renderBulk(){
+    const n = S.sel.size;
+    $("bulkBar").classList.toggle("hidden", !n);
+    $("bulkTxt").textContent = t("selected", fmt(n));
+    $("selAll").checked = S.visible.length > 0 && S.visible.every(id => S.sel.has(id));
+  }
+  async function reassign(id, agentId){ try { await upd(id, {agentId, updatedAt: now()}); toast(t("moved_to", agentName(agentId))); refetch("calls"); } catch(e){ writeErr(e); } }
+  async function deleteIds(ids){ const { error } = await S.sb.from("calls").delete().in("id", ids); if (error) throw error; }
+  async function deleteCall(id){
+    const x = S.calls.find(c => c.id === id);
+    const fu = x && x.followupId ? S.calls.find(c => c.id === x.followupId && !FINAL.includes(c.status)) : null;
+    if (!await ask(t(fu ? "del_q_fu" : "del_q"), {title:t("del_title"), ok:t("del_title")})) return;
+    try { await deleteIds(fu ? [id, fu.id] : [id]); toast(t("deleted")); refetch("calls"); } catch(e){ writeErr(e); }
+  }
+  async function bulkDelete(){
+    const ids = new Set(S.sel);
+    S.calls.forEach(x => { if (ids.has(x.id) && x.followupId){ const fu = S.calls.find(c => c.id === x.followupId && !FINAL.includes(c.status)); if (fu) ids.add(fu.id); } });
+    const extra = ids.size - S.sel.size;
+    if (!await ask(t("bulk_q", fmt(S.sel.size), extra ? fmt(extra) : 0), {title:t("bulk_title"), ok:t("del_title")})) return;
+    try { await deleteIds([...ids]); toast(t("bulk_done", fmt(ids.size))); S.sel.clear(); refetch("calls"); } catch(e){ writeErr(e); }
+  }
+  async function cleanOld(){
+    const cut = now() - 30*DAY;
+    const old = S.calls.filter(x => FINAL.includes(x.status) && (x.calledAt || x.updatedAt || 0) < cut);
+    if (!old.length){ toast(t("clean_none")); return; }
+    if (!await ask(t("clean_q", fmt(old.length)), {title:t("clean_title"), ok:t("clean_ok")})) return;
+    try { await deleteIds(old.map(x => x.id)); toast(t("clean_done", fmt(old.length))); refetch("calls"); } catch(e){ writeErr(e); }
+  }
+  const csvCell = (v) => `"${String(v ?? "").replace(/"/g,'""')}"`;
+  const stamp = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+  function saveCsv(filename, head, rows){
+    const blob = new Blob(["\uFEFF" + [head.map(csvCell).join(","), ...rows.map(r => r.map(csvCell).join(","))].join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  const exportCsv = () => saveCsv(`calls-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_type"),t("th_agent"),t("th_status"),t("note_ph"),"Note",t("attempts","#"),t("whatsapp"),t("th_value"),"Added",t("th_last")],
+    S.calls.map(x => [x.phone, x.name, tyTag(typeOf(x)), agentName(x.agentId), stL(x.status), x.result, x.note, x.attempts||0, x.waAt ? t("wa_sent") : "", x.amount||"",
+      x.createdAt ? new Date(x.createdAt).toLocaleString("en-GB") : "", x.calledAt ? new Date(x.calledAt).toLocaleString("en-GB") : ""]));
+  const exportOrders = () => saveCsv(`recovered-orders-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_agent"),t("th_value"),t("th_recovered"),t("note_ph")],
+    S.ordersNow.map(x => [x.phone, x.name, agentName(x.agentId), x.amount||"", x.calledAt ? new Date(x.calledAt).toLocaleString("en-GB") : "", x.result]));
+
+  /* ================= MANAGER: STATISTICS ================= */
+  const dayKey = (x) => { const d = new Date(x); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+  const fromKey = (k, end) => { const [y,m,d] = k.split("-").map(Number); return end ? new Date(y,m-1,d,23,59,59,999).getTime() : new Date(y,m-1,d).getTime(); };
+  function setPreset(p){
+    S.preset = p; const t0 = sod();
+    if (p === "today") S.range = {from:t0, to:t0 + DAY - 1};
+    else if (p === "yesterday") S.range = {from:t0 - DAY, to:t0 - 1};
+    else if (p === "7" || p === "30") S.range = {from:t0 - (Number(p)-1)*DAY, to:t0 + DAY - 1};
+    else S.range = {from:0, to:t0 + DAY - 1};
+  }
+  function attemptsIn(x, from, to){
+    const log = Array.isArray(x.log) ? x.log : [];
+    const e = log.filter(l => l && l.t >= from && l.t <= to);
+    if (!log.length && x.calledAt && x.calledAt >= from && x.calledAt <= to) e.push({s:x.status, t:x.calledAt});
+    return e;
+  }
+  function crunch(list, from, to){
+    const out = {total:0, customers:0, amount:0, orders:[], days:{}};
+    Object.keys(TYPES).forEach(k => out[k] = {calls:0, customers:0, res:{}});
+    list.forEach(x => {
+      const e = attemptsIn(x, from, to); if (!e.length) return;
+      const k = typeOf(x), last = e[e.length-1].s, b = out[k];
+      b.calls += e.length; b.customers++; b.res[last] = (b.res[last]||0) + 1;
+      out.total += e.length; out.customers++;
+      e.forEach(l => { const d = dayKey(l.t); out.days[d] = out.days[d] || {purchased:0, followup:0, checkout:0}; out.days[d][k]++; });
+      if (k === "checkout" && x.status === "interested" && e.some(l => l.s === "interested")){ out.orders.push(x); out.amount += Number(x.amount)||0; }
+    });
+    return out;
+  }
+  function dayChart(d, from, to){
+    let start = from;
+    if (!start){ const keys = Object.keys(d.days).sort(); start = keys.length ? fromKey(keys[0]) : sod(); }
+    const days = []; for (let x = start; x <= to && days.length < 92; x += DAY) days.push(dayKey(x));
+    if (days.length > 60) days.splice(0, days.length - 60);
+    const vals = days.map(k => d.days[k] || {purchased:0, followup:0, checkout:0});
+    const tot = vals.map(v => v.purchased + v.followup + v.checkout);
+    if (!tot.reduce((a,b) => a + b, 0)) return `<div class="empty">${ico("chart")}<b>${esc(t("chart_empty"))}</b>${esc(t("chart_empty_s"))}</div>`;
+    const max = Math.max(4, ...tot), step = Math.pow(10, Math.floor(Math.log10(max))), nice = Math.ceil(max / step) * step;
+    const W = 900, H = 230, L = 36, B = 26, T = 10, cw = (W - L) / days.length, bw = Math.max(3, Math.min(34, cw * .62));
+    const y = (v) => H - B - (v / nice) * (H - B - T);
+    let g = "";
+    for (let i = 0; i <= 4; i++){ const v = nice * i / 4, yy = y(v); g += `<line x1="${L}" x2="${W}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="var(--axis)">${fmt(Math.round(v))}</text>`; }
+    const every = Math.ceil(days.length / 10);
+    days.forEach((k, i) => {
+      const x = L + i * cw + (cw - bw) / 2; let acc = 0;
+      [["purchased","var(--new)"],["followup","var(--fu)"],["checkout","var(--inc)"]].forEach(([ty,c]) => {
+        const v = vals[i][ty]; if (!v) return;
+        const y1 = y(acc + v), h = y(acc) - y1; acc += v;
+        g += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(h,1)}" rx="${Math.min(4, bw/3)}" fill="${c}"><title>${esc(dateL(fromKey(k),{month:"short", day:"numeric"}))}: ${fmt(v)} ${esc(tyName(ty))}</title></rect>`;
+      });
+      if (i % every === 0 || days.length <= 10) g += `<text x="${x + bw/2}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--axis)">${esc(dateL(fromKey(k), days.length <= 7 ? {weekday:"short"} : {month:"short", day:"numeric"}))}</text>`;
+    });
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("chart_title"))}" style="font-family:inherit">${g}</svg>`;
+  }
+  function donut(segs, center, label){
+    const total = segs.reduce((a,s) => a + s.v, 0);
+    let off = 25, arcs = "";
+    if (total) segs.forEach(s => { if (!s.v) return; const p = s.v / total * 100; arcs += `<circle cx="21" cy="21" r="15.915" fill="none" stroke="${s.c}" stroke-width="5" stroke-dasharray="${p} ${100 - p}" stroke-dashoffset="${off}"/>`; off -= p; });
+    return `<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="${esc(label)}" style="font-family:inherit"><circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--soft2)" stroke-width="5"/>${arcs}
+      <text x="21" y="21.5" text-anchor="middle" font-size="7.5" font-weight="800" fill="var(--ink)">${center}</text><text x="21" y="27.5" text-anchor="middle" font-size="3.6" fill="var(--muted)">${esc(label)}</text></svg>`;
+  }
+  function renderStats(){
+    if (!S.range) setPreset("today");
+    const {from, to} = S.range;
+    document.querySelectorAll("#presetSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.preset === S.preset)));
+    if (document.activeElement !== $("dFrom")) $("dFrom").value = from ? dayKey(from) : "";
+    if (document.activeElement !== $("dTo")) $("dTo").value = dayKey(to);
+    const sel = $("sAgent"); sel.innerHTML = `<option value="">${esc(t("all_agents"))}</option>` + S.agents.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("");
+    sel.value = [...sel.options].some(o => o.value === S.statAgent) ? S.statAgent : ""; S.statAgent = sel.value;
+    const span = S.preset === "all" ? t("all_time") : dayKey(from) === dayKey(to) ? (isToday(from) ? t("today") : dateL(from,{weekday:"long", month:"long", day:"numeric"}))
+      : t("range_to", dateL(from,{month:"short", day:"numeric"}), dateL(to,{month:"short", day:"numeric", year:"numeric"}));
+    $("rangeTxt").textContent = `${S.statAgent ? agentName(S.statAgent) : t("whole_team")}${LANG === "ar" ? "، " : ", "}${span}`;
+    const d = crunch(S.calls.filter(x => !S.statAgent || x.agentId === S.statAgent), from, to);
+    const P = d.purchased, F = d.followup, C = d.checkout, rec = C.res.interested || 0;
+    $("sKpis").innerHTML =
+      kpi(t("k_total"), fmt(d.total), t("with_c", fmt(d.customers)), ["phone"], "hero") +
+      kpi(t("k_conf"), fmt(P.calls), t("n_confirmed", fmt(P.res.confirmed||0)), ["bag","new"]) +
+      kpi(t("k_fb"), fmt(F.calls), t("fb_sub", fmt(F.res.happy||0), fmt(F.res.issue||0)), ["chat","fu"]) +
+      kpi(t("k_co"), fmt(C.calls), t("co_sub", fmt(rec)), ["cart","inc"]);
+    $("dayChart").innerHTML = dayChart(d, from, to);
+    const card = (k, rateLbl, rateVal, foot) => {
+      const b = d[k], T = TYPES[k];
+      const segs = T.results.map(r => ({v:b.res[r]||0, c:RES_COLOR[r], l:stL(r)}));
+      return `<section class="card tc"><div class="hd"><span class="ic ${T.icc}">${ico(T.ic)}</span><h3>${esc(tyName(k))}</h3></div>
+        <div class="body">${donut(segs, pctS(rateVal), rateLbl)}<div class="lg">${segs.map(s => `<div><i style="background:${s.c}"></i><span>${esc(s.l)}</span><b>${fmt(s.v)}</b></div>`).join("")}</div></div>
+        <div class="foot-stat"><span>${esc(foot[0])}</span><b>${foot[1]}</b></div></section>`;
+    };
+    $("sTypes").innerHTML =
+      card("purchased", t("d_confirmed"), pct(P.res.confirmed||0, P.customers), [t("customers_called"), fmt(P.customers)]) +
+      card("followup", t("d_satisfied"), pct(F.res.happy||0, (F.res.happy||0) + (F.res.issue||0)), [t("customers_called"), fmt(F.customers)]) +
+      card("checkout", t("d_recovered"), pct(rec, C.customers), [d.amount ? t("rec_revenue") : t("orders_recovered"), d.amount ? esc(money(d.amount)) : fmt(rec)]);
+    $("sTeamCard").classList.toggle("hidden", !!S.statAgent);
+    if (!S.statAgent){
+      $("sTeamRows").innerHTML = S.agents.map(a => {
+        const x = crunch(S.calls.filter(c => c.agentId === a.id), from, to), r = x.checkout.res.interested || 0, rate = pct(r, x.checkout.customers);
+        return `<tr><td><div class="row" style="flex-wrap:nowrap">${avatar(a)}<b>${esc(a.name)}</b></div></td><td class="num">${fmt(x.total)}</td><td class="num">${fmt(x.purchased.calls)}</td><td class="num">${fmt(x.followup.calls)}</td><td class="num">${fmt(x.checkout.calls)}</td><td class="num">${fmt(r)}</td>
+          <td><div class="meter"><div class="bar"><i style="width:${rate}%"></i></div><span class="small num">${pctS(rate)}</span></div></td></tr>`;
+      }).join("") || emptyRow(7, t("no_agents"), "", "users");
+    }
+    if (!(document.activeElement && document.activeElement.dataset && document.activeElement.dataset.amount)){
+      S.ordersNow = d.orders.sort((a,b) => (b.calledAt||0) - (a.calledAt||0));
+      $("orderRows").innerHTML = S.ordersNow.map(x => `<tr>
+        <td class="who" dir="auto"><b>${esc(x.name || t("no_name"))}</b>${x.result ? `<span>${esc(x.result)}</span>` : ""}</td>
+        <td class="ph-n">${esc(x.phone)}</td><td>${esc(agentName(x.agentId) || "—")}</td>
+        <td><input type="text" inputmode="decimal" class="amt" data-amount="${esc(x.id)}" value="${x.amount ? esc(x.amount) : ""}" placeholder="—"></td>
+        <td class="when">${esc(when(x.calledAt))}</td></tr>`).join("") || emptyRow(5, t("no_orders"), t("no_orders_s"), "cart");
+    }
+  }
+  async function setAmount(id, v){ const n = toNum(v); try { await upd(id, {amount: n > 0 ? n : null, updatedAt: now()}); toast(t("value_saved")); } catch(e){ writeErr(e); } }
+
+  /* ================= AGENT ================= */
+  const mine = () => S.calls.filter(x => x.agentId === S.me.id);
+  const byNext = (a,b) => (nextAt(a)||0) - (nextAt(b)||0);
+  const nowList = () => mine().filter(actionable).sort(byNext);
+  const laterList = () => mine().filter(waiting).sort(byNext);
+  const doneList = () => mine().filter(x => isToday(x.calledAt) && !actionable(x)).sort((a,b) => b.calledAt - a.calledAt);
+  function renderAgent(){
+    const me = S.me;
+    const n = nowList(), l = laterList(), d = doneList();
+    $("helloName").textContent = `${greet()}${LANG === "ar" ? " يا " : ", "}${me.name}`;
+    $("helloSub").textContent = n.length ? t("hello_sub", n.length === 1 && LANG === "en" ? 1 : fmt(n.length)) : t("caught_up");
+    const pos = d.filter(x => POSITIVE.includes(x.status)).length;
+    $("aKpis").innerHTML =
+      kpi(t("k_callnow"), fmt(n.length), t("k_callnow_s"), ["phone"], "hero") +
+      kpi(t("k_done"), fmt(d.length), t("k_done_s"), ["check"]) +
+      kpi(t("k_pos_today"), fmt(pos), t("k_pos_today_s"), ["bag","new"]) +
+      kpi(t("k_sched"), fmt(l.length), t("k_sched_a"), ["clock","fu"]);
+    $("n_now").textContent = fmt(n.length); $("n_later").textContent = fmt(l.length); $("n_done").textContent = fmt(d.length);
+    document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === S.tab)));
+    $("newAlert").classList.toggle("hidden", !S.newCount);
+    $("newText").textContent = t("new_alert", LANG === "en" ? S.newCount : fmt(S.newCount));
+    document.title = S.newCount ? `(${S.newCount}) CallDesk` : "CallDesk";
+    const rows = S.tab === "now" ? n : S.tab === "later" ? l : d;
+    const E = {now:[t("e_now"), t("e_now_s"), "check"], later:[t("e_later"), t("e_later_s"), "clock"], done:[t("e_done"), "", "phone"]}[S.tab];
+    $("myRows").innerHTML = rows.map(x => {
+      const sub = S.tab === "done" ? x.result : (x.result || x.note);
+      const acts = S.tab === "done" ? `<span class="when">${esc(when(x.calledAt))}</span>` : `<div class="acts">
+        <a class="btn primary sm" href="tel:${esc(cleanPhone(x.phone))}" data-call="${esc(x.id)}">${ico("phone")}${esc(t("call"))}</a>
+        ${x.status === "no_answer" ? `<a class="btn wa sm" href="${esc(waLink(x))}" target="_blank" rel="noopener" data-wa="${esc(x.id)}">${ico("wa")}${esc(t("whatsapp"))}</a>` : ""}
+        <button class="btn sm" data-open="${esc(x.id)}">${esc(t("log_result"))}</button></div>`;
+      return `<tr><td class="who" dir="auto"><b>${esc(x.name || t("no_name"))}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</td>
+        <td class="ph-n c-ph">${esc(x.phone)}</td><td class="c-ty">${typeChip(x)}</td><td class="c-st">${statusChip(x)}</td><td class="c-ac">${acts}</td></tr>`;
+    }).join("") || emptyRow(5, E[0], E[1], E[2]);
+    if (S.modalId && !S.calls.some(c => c.id === S.modalId)) closeModal();
+  }
+  function openModal(id){
+    const x = S.calls.find(c => c.id === id); if (!x) return;
+    S.modalId = id; S.draftStatus = null;
+    const k = typeOf(x);
+    $("modal").innerHTML = `
+      <div class="mh"><div>${typeChip(x)}<h3 id="mName" dir="auto">${esc(x.name || t("no_name"))}</h3></div><button class="x" id="mClose" aria-label="${esc(t("close"))}">${ico("x")}</button></div>
+      <div class="big">${esc(x.phone)}</div>
+      ${x.note ? `<p class="small muted" style="margin:-4px 0 10px" dir="auto">${esc(x.note)}</p>` : ""}
+      <div class="hint">${ico("info")}<span>${esc(tyHint(k))}</span></div>
+      ${x.attempts ? `<p class="small muted" style="margin:0 0 10px">${esc(t("called_before", LANG === "en" ? x.attempts : fmt(x.attempts)))}${x.result ? `. ${esc(t("last_note"))}: <span dir="auto">${esc(x.result)}</span>` : ""}</p>` : ""}
+      <div class="small" style="font-weight:700;margin-bottom:6px">${esc(t("call_result"))}</div>
+      <div class="res">${TYPES[k].results.map(r => `<button data-result="${r}" aria-pressed="false">${esc(stL(r))}</button>`).join("")}</div>
+      <p class="small muted hidden" id="retryNote" style="margin:0 0 10px">${esc(t("retry_note", time(now() + RETRY_HOURS*HOUR)))}</p>
+      <div id="amountBox" class="hidden" style="margin-bottom:10px"><label for="amountIn" class="fld" style="margin-top:0">${esc(t("amount_lbl"))}</label><input type="text" id="amountIn" inputmode="decimal" dir="ltr" placeholder="${esc(t("amount_ph"))}"></div>
+      <textarea id="resultNote" placeholder="${esc(t("note_ph"))}" dir="auto"></textarea>
+      <div class="mf"><button class="btn primary" id="saveResult" disabled>${esc(t("save_result"))}</button>
+        <a class="btn wa" href="${esc(waLink(x))}" target="_blank" rel="noopener" data-wa="${esc(x.id)}">${ico("wa")}${esc(t("whatsapp"))}</a></div>`;
+    $("modalBack").classList.remove("hidden");
+  }
+  function closeModal(){ S.modalId = null; $("modalBack").classList.add("hidden"); }
+  async function saveResult(){
+    const x = S.calls.find(c => c.id === S.modalId);
+    if (!x || !S.draftStatus) return;
+    const tm = now(), st = S.draftStatus, note = $("resultNote").value.trim();
+    const retryAt = st === "no_answer" ? tm + RETRY_HOURS*HOUR : null;
+    const patch = {status:st, result:note, calledAt:tm, updatedAt:tm, retryAt, attempts:(x.attempts||0)+1, log:[...(Array.isArray(x.log) ? x.log : []).slice(-19), {s:st, n:note, t:tm}]};
+    const amt = SALE.includes(st) ? toNum($("amountIn").value) : 0; if (amt > 0) patch.amount = amt;
+    $("saveResult").disabled = true;
+    try {
+      await upd(x.id, patch);
+      S.seen.add(x.id + ":" + st + ":" + (retryAt || tm));
+      if (x.followupId && (st === "wrong" || st === "cancelled")){
+        const fu = S.calls.find(c => c.id === x.followupId && !FINAL.includes(c.status));
+        if (fu){ try { await upd(fu.id, {status:"skipped", result: t(st === "wrong" ? "wrong_note" : "cancelled_note"), updatedAt:tm}); } catch(e){} }
+      }
+      closeModal();
+      toast(st === "no_answer" ? t("saved_retry", time(retryAt)) : t("saved", stL(st)));
+      refetch("calls");
+    } catch(e){ writeErr(e); $("saveResult").disabled = false; }
+  }
+  async function markWa(id){ try { await upd(id, {waAt: now(), updatedAt: now()}); } catch(e){} }
+  function checkNew(){
+    if (!S.me || !S.loaded || isManager()) return;
+    const fresh = mine().filter(actionable).filter(x => !S.seen.has(noticeKey(x)));
+    fresh.forEach(x => S.seen.add(noticeKey(x)));
+    if (!S.primed){ S.primed = true; return; }
+    if (fresh.length){
+      S.newCount += fresh.length;
+      toast(t("new_toast", LANG === "en" ? fresh.length : fmt(fresh.length)));
+      try { navigator.vibrate && navigator.vibrate([120,80,120]); } catch(e){}
+    }
+  }
+
+  /* ================= ROOT ================= */
+  function render(){
+    if (!S.me) return;
+    ["v_home","v_stats","v_calls","v_agent"].forEach(v => $(v).classList.add("hidden"));
+    renderNav();
+    if (isManager()){
+      $("v_" + S.view).classList.remove("hidden");
+      if (S.view === "home") renderHome(); else if (S.view === "stats") renderStats(); else renderCalls();
+    } else { $("v_agent").classList.remove("hidden"); renderAgent(); }
+  }
+  function setLang(l){ LANG = l; store.set("calls.lang", l); applyStatic(); if (S.modalId){ openModal(S.modalId); } render(); }
+  function setTheme(th){ THEME = th; store.set("calls.theme", th); applyStatic(); }
+
+  document.addEventListener("click", (e) => {
+    if (e.target === $("modalBack")){ closeModal(); return; }
+    if (e.target === $("askBack")){ answer(false); return; }
+    if (e.target === $("formBack")){ closeForm(null); return; }
+    const b = e.target.closest("button, a[data-call], a[data-wa]"); if (!b) return;
+    const ds = b.dataset;
+    if (ds.call){ const id = ds.call; setTimeout(() => openModal(id), 700); return; }
+    if (ds.wa){ markWa(ds.wa); return; }
+    if (ds.lang){ setLang(ds.lang); return; }
+    if (b.classList.contains("themeBtn")){ setTheme(THEME === "dark" ? "light" : "dark"); return; }
+    if (ds.view){ if (ds.view !== "agent"){ S.view = ds.view; store.set("calls.view", S.view); } render(); window.scrollTo({top:0}); return; }
+    if (ds.type){ S.addType = ds.type; document.querySelectorAll("[data-type]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); return; }
+    if (ds.preset){ setPreset(ds.preset); renderStats(); return; }
+    if (ds.delAgent){ removeAgent(ds.delAgent); return; }
+    if (ds.pw){ resetAgentPw(ds.pw); return; }
+    if (ds.rename){ renameAgent(ds.rename); return; }
+    if (ds.delCall){ deleteCall(ds.delCall); return; }
+    if (ds.tab){ S.tab = ds.tab; renderAgent(); return; }
+    if (ds.open){ openModal(ds.open); return; }
+    if (ds.result){
+      S.draftStatus = ds.result;
+      document.querySelectorAll("[data-result]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      $("saveResult").disabled = false;
+      $("retryNote").classList.toggle("hidden", ds.result !== "no_answer");
+      $("amountBox").classList.toggle("hidden", !SALE.includes(ds.result));
+      return;
+    }
+    switch (b.id){
+      case "pwBtn": changePassword(); break;
+      case "outBtn": signOut(); break;
+      case "addAgentBtn": addAgent(); break;
+      case "addNumbersBtn": addNumbers($("numbersInput").value); break;
+      case "saveTpl": saveTemplates(); break;
+      case "saveResult": saveResult(); break;
+      case "mClose": closeModal(); break;
+      case "newDismiss": S.newCount = 0; renderAgent(); break;
+      case "cleanBtn": cleanOld(); break;
+      case "exportBtn": exportCsv(); break;
+      case "exportOrders": exportOrders(); break;
+      case "resetBtn": resetAll(); break;
+      case "bulkDel": bulkDelete(); break;
+      case "bulkClear": S.sel.clear(); renderCalls(); break;
+      case "askYes": answer(true); break;
+      case "askNo": answer(false); break;
+      case "fdNo": closeForm(null); break;
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && askResolve){ answer(false); return; }
+    if (e.key === "Escape" && formResolve){ closeForm(null); return; }
+    if (e.key === "Escape" && S.modalId) closeModal();
+  });
+  document.addEventListener("input", (e) => { if (e.target.id === "fSearch"){ S.filter.q = e.target.value; renderCalls(); } });
+  document.addEventListener("change", (e) => {
+    const x = e.target;
+    if (x.id === "fAgent"){ S.filter.agent = x.value; renderCalls(); }
+    if (x.id === "fType"){ S.filter.type = x.value; renderCalls(); }
+    if (x.id === "fStatus"){ S.filter.status = x.value; renderCalls(); }
+    if (x.dataset.reassign && x.value) reassign(x.dataset.reassign, x.value);
+    if (x.dataset.amount) setAmount(x.dataset.amount, x.value);
+    if (x.dataset.sel){ x.checked ? S.sel.add(x.dataset.sel) : S.sel.delete(x.dataset.sel); renderBulk(); }
+    if (x.id === "selAll"){ const on = x.checked; S.visible.forEach(id => on ? S.sel.add(id) : S.sel.delete(id)); renderCalls(); }
+    if (x.id === "sAgent"){ S.statAgent = x.value; renderStats(); }
+    if ((x.id === "dFrom" || x.id === "dTo") && x.value){
+      const f = $("dFrom").value ? fromKey($("dFrom").value) : 0, to = $("dTo").value ? fromKey($("dTo").value, true) : sod() + DAY - 1;
+      if (f > to){ toast(t("e_dates")); return; }
+      S.preset = "custom"; S.range = {from:f, to}; renderStats();
+    }
+    if (x.id === "csvFile" && x.files && x.files[0]){
+      const r = new FileReader();
+      r.onload = () => { $("numbersInput").value = String(r.result || ""); toast(t("file_loaded")); };
+      r.readAsText(x.files[0]); x.value = "";
+    }
+  });
+  $("loginForm").addEventListener("submit", signIn);
+
+  // time-based changes (follow-ups coming due, 2-hour retries) + a safety refetch in case a live event was missed
+  setInterval(() => { if (!S.me) return; checkNew(); if (!S.modalId && !askResolve && !formResolve) render(); }, 60000);
+  setInterval(() => { if (S.me) refetch("calls"); }, 5 * 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && S.me) refetch("calls"); });
+
+  /* ================= BOOT ================= */
+  applyStatic();
+  (async function boot(){
+    if (!window.supabase || !window.supabase.createClient){ showOnly("login"); $("lErr").textContent = t("net_err"); $("lErr").classList.remove("hidden"); return; }
+    S.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession:true, autoRefreshToken:true } });
+    S.sb.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT" && S.me){ S.me = null; showOnly("login"); } });
+    const { data } = await S.sb.auth.getSession();
+    if (data && data.session) await startSession(data.session); else showOnly("login");
+  })();
+})();
+
+</script>
+</body>
+</html>
