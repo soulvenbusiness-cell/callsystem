@@ -286,6 +286,19 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
 .addform{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .addform .full{grid-column:1 / -1}
 @media (max-width:560px){.addform{grid-template-columns:1fr}}
+.qchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.qchips button{border:1.5px solid var(--line);background:var(--card);padding:6px 12px;border-radius:99px;cursor:pointer;font-weight:600;font-size:.85rem;color:var(--ink)}
+.qchips button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-tint);color:var(--brand-dk)}
+.res.two button{padding:14px;font-size:1rem}
+.qrow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:10px;align-items:center;padding:7px 0;font-size:.9rem}
+.qrow .bar{height:8px;border-radius:99px;background:var(--soft2);overflow:hidden}
+.qrow .bar i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.qrow b{font-variant-numeric:tabular-nums}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rbox{background:var(--soft);border-radius:12px;padding:12px 14px}
+.rbox span{display:block;font-size:.8rem;color:var(--muted);font-weight:600}
+.rbox b{display:block;font-size:1.5rem;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.rbox small{color:var(--muted);font-size:.78rem}
 .person .em{font-size:.78rem;color:var(--muted);direction:ltr;unicode-bidi:isolate}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
@@ -407,6 +420,12 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
             <label class="fld" for="tpl_followup" data-i="tpl_followup"></label><textarea id="tpl_followup" dir="auto"></textarea>
             <button class="btn primary" id="saveTpl" style="margin-top:12px" data-i="save_msgs"></button>
           </details>
+          <details class="acc">
+            <summary><svg class="i" style="color:var(--brand)"><use href="#i-chat"/></svg><span data-i="q_title"></span><svg class="i chev"><use href="#i-chev"/></svg></summary>
+            <p class="small muted" style="margin:8px 0 8px" data-i="q_sub"></p>
+            <textarea id="qList" dir="auto" style="min-height:150px"></textarea>
+            <button class="btn primary" id="saveQ" style="margin-top:12px" data-i="save_q"></button>
+          </details>
         </section>
       </div>
     </section>
@@ -438,6 +457,10 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
         <div id="dayChart"></div>
       </section>
       <div class="g3" id="sTypes" style="margin-bottom:18px"></div>
+      <div class="g2" style="margin-bottom:18px">
+        <section class="card"><h2 data-i="top_q"></h2><p class="sub" data-i="top_q_sub"></p><div id="sQuestions"></div></section>
+        <section class="card"><h2 data-i="reach"></h2><p class="sub" data-i="reach_sub"></p><div id="sReach"></div></section>
+      </div>
       <section class="card" id="sTeamCard" style="margin-bottom:18px">
         <h2 data-i="team_cmp"></h2>
         <p class="sub" data-i="same_period"></p>
@@ -569,7 +592,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       no_agents:"No agents yet",
       orders_title:"Orders recovered from checkout", orders_sub:"Add the order value if the agent didn't, and it will count toward revenue.",
       th_customer:"Customer", th_phone:"Phone", th_value:"Value (EGP)", th_recovered:"Recovered", th_type:"Type", th_status:"Status", th_last:"Last update",
-      no_orders:"No recovered orders in this period", no_orders_s:"When an agent marks a checkout call as Order completed, it shows up here.",
+      no_orders:"No recovered orders in this period", no_orders_s:"When an agent marks a checkout call as Ordered, it shows up here.",
       value_saved:"Value saved", money:(n) => `EGP ${n}`,
       calls_sub:"Every customer in the system, with their latest status.", export_csv:"Export CSV", clean_old:"Clear finished calls older than 30 days",
       search_ph:"Search by name or phone", all_types:"All types", all_statuses:"All statuses", due_now:"Due now", scheduled:"Scheduled",
@@ -604,7 +627,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       e_view:"You have view-only access. Ask the owner to share this page with you as a Contributor or Editor.",
       e_open:"Open this page from its claude.ai link so it can load and save data.", e_db:"The database isn't available right now. Close the page and open it again from claude.ai.",
       e_lost:"Lost connection. Refresh the page.", e_dates:"The start date is after the end date.", sure:"Are you sure?", ok:"OK",
-      st:{pending:"Pending", no_answer:"No answer", callback:"Call back", confirmed:"Confirmed", cancelled:"Cancelled", interested:"Order completed", not_interested:"Not interested", happy:"Satisfied", issue:"Has an issue", wrong:"Wrong number", skipped:"Skipped"},
+      st:{pending:"Pending", no_answer:"No answer", callback:"Call back", confirmed:"Confirmed", cancelled:"Cancelled", wrong:"Wrong number", interested:"Ordered", not_confirmed:"Didn't confirm", too_expensive:"Too expensive", later:"Will buy later", dropped:"Dropped the idea", not_interested:"Not interested", happy:"Very happy", issue:"Not happy", return:"Wants to return", not_tried:"Hasn't tried yet", skipped:"Skipped"},
       ty:{purchased:["New","Order confirmation","Confirm the order details, delivery address and a good delivery time."],
           checkout:["Incomplete","Incomplete checkout","Ask what stopped them, and help them complete the order."],
           followup:["Feedback","Feedback after 3 days","Ask if the order arrived, whether they like the product, and if there's anything to fix."]}
@@ -651,7 +674,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       no_agents:"مفيش موظفين لسه",
       orders_title:"الأوردرات اللي اتنفذت من الـCheckout", orders_sub:"اكتب قيمة الأوردر لو الموظف مكتبهاش، وهتتحسب في المبيعات.",
       th_customer:"العميل", th_phone:"الرقم", th_value:"القيمة (ج.م)", th_recovered:"اتنفذ", th_type:"النوع", th_status:"الحالة", th_last:"آخر تحديث",
-      no_orders:"مفيش أوردرات من الـCheckout في الفترة دي", no_orders_s:"أول ما موظف يسجل \"كمّل الطلب\" هيظهر هنا.",
+      no_orders:"مفيش أوردرات من الـCheckout في الفترة دي", no_orders_s:"أول ما موظف يسجل إن عميل Checkout أكد الأوردر، هيظهر هنا.",
       value_saved:"القيمة اتحفظت", money:(n) => `${n} ج.م`,
       calls_sub:"كل العملاء في السيستم وآخر حالة ليهم.", export_csv:"تنزيل CSV", clean_old:"مسح المكالمات الخلصانة الأقدم من ٣٠ يوم",
       search_ph:"دوّر بالاسم أو الرقم", all_types:"كل الأنواع", all_statuses:"كل الحالات", due_now:"محتاج مكالمة دلوقتي", scheduled:"مجدول",
@@ -686,7 +709,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       e_view:"انت فاتح الصفحة مشاهدة بس. اطلب من صاحبها يشاركها معاك كـContributor أو Editor.",
       e_open:"افتح الصفحة من لينك claude.ai عشان تقدر تحمّل وتحفظ البيانات.", e_db:"قاعدة البيانات مش متاحة دلوقتي. اقفل الصفحة وافتحها تاني من claude.ai.",
       e_lost:"الاتصال وقف. اعمل ريفريش للصفحة.", e_dates:"تاريخ البداية بعد تاريخ النهاية.", sure:"متأكد؟", ok:"تمام",
-      st:{pending:"لسه", no_answer:"مردش", callback:"يتكلم تاني", confirmed:"أكد الأوردر", cancelled:"لغى الأوردر", interested:"كمّل الطلب", not_interested:"مش مهتم", happy:"مبسوط", issue:"عنده مشكلة", wrong:"رقم غلط", skipped:"اتلغت"},
+      st:{pending:"لسه", no_answer:"مردش", callback:"يتكلم تاني", confirmed:"أكد الأوردر", cancelled:"لغى الأوردر", wrong:"رقم غلط", interested:"أكد الأوردر", not_confirmed:"مأكدوش", too_expensive:"شايف إنه غالي", later:"هيشتري بعدين", dropped:"كنسل الفكرة", not_interested:"مش مهتم", happy:"مبسوط جداً", issue:"مش مبسوط", return:"عاوز يرجعه", not_tried:"مجربوش لسه", skipped:"اتلغت"},
       ty:{purchased:["جديد","تأكيد أوردر","أكد معاه تفاصيل الأوردر والعنوان وميعاد التوصيل."],
           checkout:["Incomplete","Checkout مكملش","اسأله إيه اللي وقفه، وساعده يكمل الطلب."],
           followup:["فيدباك","فيدباك بعد ٣ أيام","اسأله: الأوردر وصل؟ المنتج عجبه؟ فيه أي مشكلة نقدر نحلها؟"]}
@@ -706,6 +729,14 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     rename:"Rename", rename_title:"Rename agent", renamed:"Name updated", agent_name:"Name",
     rm_q:(n,o) => `Delete ${n}'s account? They won't be able to sign in anymore.` + (o ? ` Their ${o} open calls will stay unassigned until you reassign them.` : ""),
     func_err:"The manage-agents function isn't reachable. Check that it's deployed in Supabase.",
+    email_opened:"Opened from email", email_col:"Opened from email", split_result:(l) => ` Assigned: ${l}.`,
+    did_answer:"Did the customer answer?", answered:"Answered", no_answer_btn:"No answer", what_happened:"What happened?",
+    cust_q:"Questions the customer asked", other_q:"Another question (optional)",
+    later_note:(d) => `This customer comes back to "Call now" on ${d}.`, saved_later:(d) => `Saved. They'll come back on ${d}.`,
+    q_title:"Customer questions", q_sub:"One question per line. Agents tick these when an order is confirmed.", save_q:"Save questions", q_saved:"Questions saved",
+    top_q:"Top customer questions", top_q_sub:"Asked during confirmed orders in this period.", no_q:"No questions recorded in this period",
+    reach:"Reaching customers", reach_sub:"How often customers pick up.", answer_rate:"Answer rate", answer_rate_s:(a,b) => `${a} of ${b} calls were answered`,
+    avg_att:"Attempts until they answer", no_ans_calls:"Unanswered calls", wa_count:"WhatsApp messages sent",
     e_lost:"Live updates paused. Changes will still save; refresh if the page looks out of date."
   });
   Object.assign(I18N.ar, {
@@ -721,6 +752,14 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     rename:"تغيير الاسم", rename_title:"تغيير اسم الموظف", renamed:"الاسم اتغير", agent_name:"الاسم",
     rm_q:(n,o) => `حذف حساب ${n}؟ مش هيقدر يدخل تاني.` + (o ? ` الـ${o} مكالمة المفتوحة بتاعته هتفضل من غير موظف لحد ما توزعها.` : ""),
     func_err:"فانكشن manage-agents مش شغالة. اتأكد إنها متعملها Deploy في Supabase.",
+    email_opened:"فتحها من الإيميل", email_col:"فتحها من الإيميل", split_result:(l) => ` اتوزعوا: ${l}.`,
+    did_answer:"العميل ردّ؟", answered:"ردّ", no_answer_btn:"مردش", what_happened:"حصل إيه؟",
+    cust_q:"الأسئلة اللي العميل سألها", other_q:"سؤال تاني (اختياري)",
+    later_note:(d) => `العميل ده هيرجعلك في "كلّمهم دلوقتي" يوم ${d}.`, saved_later:(d) => `اتحفظ. هيرجعلك يوم ${d}.`,
+    q_title:"أسئلة العملاء", q_sub:"كل سؤال في سطر. الموظف بيعلّم عليها لما الأوردر يتأكد.", save_q:"حفظ الأسئلة", q_saved:"الأسئلة اتحفظت",
+    top_q:"أكتر أسئلة العملاء", top_q_sub:"اتسألت في الأوردرات اللي اتأكدت في الفترة دي.", no_q:"مفيش أسئلة متسجلة في الفترة دي",
+    reach:"الوصول للعملاء", reach_sub:"العملاء بيردوا قد إيه.", answer_rate:"نسبة الرد", answer_rate_s:(a,b) => `${a} من ${b} مكالمة العميل ردّ فيها`,
+    avg_att:"متوسط المحاولات لحد ما يرد", no_ans_calls:"مكالمات مردش فيها", wa_count:"رسايل واتساب اتبعتت",
     e_lost:"التحديث اللحظي وقف. التعديلات بتتحفظ عادي، واعمل ريفريش لو الصفحة شكلها قديم."
   });
 
@@ -732,17 +771,22 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
 
   /* ======================= DATA VOCABULARY ======================= */
   const HOUR = 36e5, DAY = 864e5, FOLLOWUP_DAYS = 3, RETRY_HOURS = 2;
-  const ST_CLS = {pending:"s-grey", no_answer:"s-warn", callback:"s-blue", confirmed:"s-ok", cancelled:"s-bad", interested:"s-ok", not_interested:"s-grey", happy:"s-ok", issue:"s-bad", wrong:"s-bad", skipped:"s-grey"};
-  const FINAL = ["confirmed","cancelled","interested","not_interested","happy","issue","wrong","skipped"];
+  const LATER_DAYS = 3, NOT_TRIED_DAYS = 2;
+  const ST_CLS = {pending:"s-grey", no_answer:"s-warn", callback:"s-blue", confirmed:"s-ok", cancelled:"s-bad", wrong:"s-bad", interested:"s-ok", not_confirmed:"s-grey", too_expensive:"s-warn", later:"s-blue", dropped:"s-grey", not_interested:"s-grey", happy:"s-ok", issue:"s-bad", return:"s-bad", not_tried:"s-blue", skipped:"s-grey"};
+  const FINAL = ["confirmed","cancelled","wrong","interested","not_confirmed","too_expensive","dropped","not_interested","happy","issue","return","skipped"];
+  const RESCHEDULE = ["no_answer","later","not_tried","callback"];     // statuses that come back to the agent
+  const Q_STATUSES = ["confirmed","interested"];                        // outcomes where we record the customer's questions
+  const DEFAULT_QUESTIONS = ["ميعاد التوصيل","مصاريف الشحن","المقاس","الدفع عند الاستلام","الاسترجاع والاستبدال","الخامة والجودة"];
   const POSITIVE = ["confirmed","interested","happy"];
   const SALE = ["confirmed","interested"];
   const TYPES = {
-    purchased:{c:"t-new", ic:"bag", icc:"new", results:["confirmed","cancelled","no_answer","callback","wrong"]},
-    checkout:{c:"t-inc", ic:"cart", icc:"inc", results:["interested","not_interested","no_answer","callback","wrong"]},
-    followup:{c:"t-fu", ic:"chat", icc:"fu", results:["happy","issue","no_answer","callback","wrong"]}
+    purchased:{c:"t-new", ic:"bag", icc:"new", results:["confirmed","cancelled","wrong"]},
+    checkout:{c:"t-inc", ic:"cart", icc:"inc", results:["interested","not_confirmed","too_expensive","later","dropped"]},
+    followup:{c:"t-fu", ic:"chat", icc:"fu", results:["happy","issue","return","not_tried"]}
   };
   const tyTag = (k) => I18N[LANG].ty[k][0], tyName = (k) => I18N[LANG].ty[k][1], tyHint = (k) => I18N[LANG].ty[k][2];
-  const RES_COLOR = {confirmed:"var(--new)", interested:"var(--new)", happy:"var(--new)", no_answer:"var(--warn)", callback:"var(--fu)", cancelled:"var(--bad)", issue:"var(--bad)", wrong:"var(--axis)", not_interested:"var(--empty)"};
+  const RES_COLOR = {confirmed:"var(--new)", interested:"var(--new)", happy:"var(--new)", no_answer:"var(--warn)", callback:"var(--fu)", later:"var(--fu)", not_tried:"var(--fu)",
+    cancelled:"var(--bad)", issue:"var(--bad)", return:"var(--bad)", dropped:"var(--bad)", too_expensive:"var(--inc)", not_confirmed:"var(--axis)", wrong:"var(--axis)", not_interested:"var(--empty)"};
   const DEFAULT_TPL = {
     purchased:"أهلاً {name} 👋 معاك {agent} من خدمة العملاء. حاولنا نكلمك عشان نأكد الأوردر بتاعك. ممكن تأكدلنا العنوان وميعاد مناسب للتوصيل؟",
     checkout:"أهلاً {name} 👋 معاك {agent} من خدمة العملاء. لاحظنا إن طلبك مكملش، لو فيه أي حاجة وقفتك أو محتاج مساعدة تكمل الطلب احنا موجودين.",
@@ -752,22 +796,23 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
 
   const S = {
     sb:null, session:null, me:null,            // me = profile row {id,name,email,role}
-    calls:[], agents:[], tpl:Object.assign({}, DEFAULT_TPL),
+    calls:[], agents:[], tpl:Object.assign({}, DEFAULT_TPL), questions:DEFAULT_QUESTIONS.slice(),
     view: (["home","stats","calls"].includes(store.get("calls.view")) ? store.get("calls.view") : "home"),
     tab:"now", filter:{agent:"",status:"",type:"",q:""}, addType:"purchased",
     seen:new Set(), primed:false, loaded:false, newCount:0, live:false,
     modalId:null, draftStatus:null, sel:new Set(), visible:[],
-    preset:"today", range:null, statAgent:"", ordersNow:[], noticeKey:null, channel:null
+    preset:"today", range:null, statAgent:"", ordersNow:[], noticeKey:null, channel:null,
+    deepCall: (new URLSearchParams(location.search)).get("call")
   };
   const isManager = () => S.me && S.me.role === "manager";
 
   /* ---------- row mapping (database snake_case <-> app camelCase) ---------- */
-  const COLS = {agentId:"agent_id", followupId:"followup_id", parentId:"parent_id", externalId:"external_id", createdAt:"created_at", updatedAt:"updated_at", calledAt:"called_at", retryAt:"retry_at", dueAt:"due_at", waAt:"wa_at"};
+  const COLS = {clickedAt:"clicked_at", clickCount:"click_count", agentId:"agent_id", followupId:"followup_id", parentId:"parent_id", externalId:"external_id", createdAt:"created_at", updatedAt:"updated_at", calledAt:"called_at", retryAt:"retry_at", dueAt:"due_at", waAt:"wa_at"};
   const num = (v) => v === null || v === undefined ? null : Number(v);
   function fromRow(r){
     return {id:r.id, type:r.type, phone:r.phone, name:r.name||"", note:r.note||"", agentId:r.agent_id, status:r.status, result:r.result||"", attempts:r.attempts||0,
       amount: r.amount === null ? null : Number(r.amount), log: Array.isArray(r.log) ? r.log : [], followupId:r.followup_id, parentId:r.parent_id,
-      createdAt:num(r.created_at), updatedAt:num(r.updated_at), calledAt:num(r.called_at), retryAt:num(r.retry_at), dueAt:num(r.due_at), waAt:num(r.wa_at)};
+      createdAt:num(r.created_at), updatedAt:num(r.updated_at), calledAt:num(r.called_at), retryAt:num(r.retry_at), dueAt:num(r.due_at), waAt:num(r.wa_at), clickedAt:num(r.clicked_at), clickCount:r.click_count||0};
   }
   function toRow(o){ const r = {}; Object.keys(o).forEach(k => { r[COLS[k] || k] = o[k]; }); return r; }
   async function upd(id, patch){ const { error } = await S.sb.from("calls").update(toRow(patch)).eq("id", id); if (error) throw error; }
@@ -803,7 +848,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
 
   function nextAt(x){
     if (x.status === "pending") return x.dueAt || x.createdAt || 0;
-    if (x.status === "no_answer") return x.retryAt || x.calledAt || 0;
+    if (x.status === "no_answer" || x.status === "later" || x.status === "not_tried") return x.retryAt || x.calledAt || 0;
     if (x.status === "callback") return x.calledAt || 0;
     return null;
   }
@@ -814,6 +859,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
   function statusChip(x){
     if (x.status === "pending" && waiting(x)) return `<span class="chip s-blue">${esc(t("scheduled_chip", when(x.dueAt)))}</span>`;
     if (x.status === "no_answer" && waiting(x)) return `<span class="chip s-warn">${esc(t("retry_chip", time(x.retryAt)))}</span>`;
+    if ((x.status === "later" || x.status === "not_tried") && waiting(x)) return `<span class="chip s-blue">${esc(stL(x.status))} · ${esc(when(x.retryAt))}</span>`;
     return `<span class="chip ${ST_CLS[x.status] || "s-grey"}">${esc(stL(x.status))}</span>`;
   }
   function waLink(x){
@@ -900,7 +946,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     $("fType").innerHTML = `<option value="">${t("all_types")}</option>` + Object.keys(TYPES).map(k => `<option value="${k}">${esc(tyTag(k))}</option>`).join("");
     $("fType").value = S.filter.type;
     $("fStatus").innerHTML = `<option value="">${t("all_statuses")}</option><option value="now">${t("due_now")}</option><option value="later">${t("scheduled")}</option>` +
-      ["no_answer","callback","confirmed","cancelled","interested","not_interested","happy","issue","wrong","skipped"].map(s => `<option value="${s}">${esc(stL(s))}</option>`).join("");
+      ["no_answer","later","not_tried","confirmed","cancelled","wrong","interested","not_confirmed","too_expensive","dropped","happy","issue","return","skipped"].map(s => `<option value="${s}">${esc(stL(s))}</option>`).join("");
     $("fStatus").value = S.filter.status;
     if (S.noticeKey) notice(S.noticeKey[0], S.noticeKey[1]);
   }
@@ -969,13 +1015,34 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     S.agents = data.filter(p => p.role === "agent").map(p => ({id:p.id, name:p.name, email:p.email}));
   }
   async function loadSettings(){
-    const { data } = await S.sb.from("settings").select("*").eq("key","templates").maybeSingle();
-    S.tpl = Object.assign({}, DEFAULT_TPL, data && data.value ? data.value : {});
+    const { data } = await S.sb.from("settings").select("*");
+    const get = (k) => ((data || []).find(r => r.key === k) || {}).value;
+    S.tpl = Object.assign({}, DEFAULT_TPL, get("templates") || {});
+    const q = get("questions");
+    S.questions = q && Array.isArray(q.list) && q.list.length ? q.list : DEFAULT_QUESTIONS.slice();
+  }
+  async function saveQuestions(){
+    const list = $("qList").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean).slice(0, 30);
+    const { error } = await S.sb.from("settings").upsert({key:"questions", value:{list}});
+    if (error) writeErr(error); else { S.questions = list.length ? list : DEFAULT_QUESTIONS.slice(); toast(t("q_saved")); }
   }
   async function loadAll(){
     try { await Promise.all([loadCalls(), loadProfiles(), loadSettings()]); S.loaded = true; }
     catch(e){ writeErr(e); }
     checkNew(); render();
+    openDeepLink();
+  }
+  // the agent tapped "Call" in a notification email: record it and open that customer
+  async function openDeepLink(){
+    const id = S.deepCall; if (!id) return;
+    S.deepCall = null;
+    try { history.replaceState(null, "", location.pathname); } catch(e){}
+    const x = S.calls.find(c => c.id === id);
+    if (!x) return;
+    if (!isManager() && x.agentId === S.me.id){
+      try { await upd(id, {clickedAt: now(), clickCount: (x.clickCount||0) + 1}); } catch(e){ console.error(e); }
+    }
+    openModal(id);
   }
   const pending = {};
   function refetch(what){
@@ -1063,10 +1130,11 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     }).join("") || `<p class="muted small" style="margin:0">${esc(t("no_agents_hint"))}</p>`;
     const aSel = $("assignSelect"), prev = aSel.value;
     aSel.innerHTML = S.agents.length
-      ? S.agents.map(a => `<option value="${esc(a.id)}">${esc(t("assign_to", a.name))}</option>`).join("") + (S.agents.length > 1 ? `<option value="__split">${esc(t("split"))}</option>` : "")
+      ? (S.agents.length > 1 ? `<option value="__split">${esc(t("split"))}</option>` : "") + S.agents.map(a => `<option value="${esc(a.id)}">${esc(t("assign_to", a.name))}</option>`).join("")
       : `<option value="">${esc(t("add_agent_first"))}</option>`;
     if ([...aSel.options].some(o => o.value === prev)) aSel.value = prev;
     if (!(document.activeElement && /^tpl_/.test(document.activeElement.id))) Object.keys(TYPES).forEach(k => { $("tpl_" + k).value = S.tpl[k] || DEFAULT_TPL[k]; });
+    if (document.activeElement !== $("qList")) $("qList").value = S.questions.join("\n");
   }
   async function addAgent(){
     const name = $("aName").value.trim(), email = $("aEmail").value.trim().toLowerCase(), password = $("aPass").value;
@@ -1113,7 +1181,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     parsed.forEach(p => { if (open.has(p.phone) || seen.has(p.phone)) { dup++; return; } seen.add(p.phone); fresh.push(p); });
     const rows = [], tm = now();
     fresh.forEach((p, i) => {
-      const agent_id = target === "__split" ? S.agents[i % S.agents.length].id : target;
+      const agent_id = target === "__split" ? null : target;     // null = the database splits evenly
       const base = {phone:p.phone, name:p.name, note:p.note, agent_id, status:"pending", created_at:tm + i, updated_at:tm};
       if (type === "purchased"){
         const pid = uuid(), fid = uuid();
@@ -1130,7 +1198,17 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     btn.disabled = false; btn.textContent = t("add_btn");
     if (!ok) return;
     $("numbersInput").value = "";
-    msg.textContent = t("added", fmt(fresh.length)) + (type === "purchased" && fresh.length ? t("fb_sched", dateL(tm + FOLLOWUP_DAYS*DAY,{weekday:"long", month:"short", day:"numeric"})) : "") + (dup ? t("dups", fmt(dup)) : "");
+    let split = "";
+    if (target === "__split"){
+      try {
+        await loadCalls();
+        const ids = new Set(rows.filter(r => r.type !== "followup").map(r => r.id)), per = {};
+        S.calls.forEach(c => { if (ids.has(c.id)) per[c.agentId] = (per[c.agentId] || 0) + 1; });
+        split = t("split_result", Object.entries(per).map(([id, n]) => `${agentName(id) || "—"} ${fmt(n)}`).join(LANG === "ar" ? "، " : ", "));
+        render();
+      } catch(e){}
+    }
+    msg.textContent = t("added", fmt(fresh.length)) + split + (type === "purchased" && fresh.length ? t("fb_sched", dateL(tm + FOLLOWUP_DAYS*DAY,{weekday:"long", month:"short", day:"numeric"})) : "") + (dup ? t("dups", fmt(dup)) : "");
     msg.classList.remove("hidden");
     refetch("calls");
   }
@@ -1168,7 +1246,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       <td class="ph-n">${esc(x.phone)}</td>
       <td>${typeChip(x)}</td>
       <td><select data-reassign="${esc(x.id)}">${opts(x.agentId)}</select></td>
-      <td>${statusChip(x)}${(x.attempts > 1 || x.waAt) ? `<div class="when" style="margin-top:3px">${x.attempts > 1 ? esc(t("attempts", fmt(x.attempts))) : ""}${x.attempts > 1 && x.waAt ? " · " : ""}${x.waAt ? esc(t("wa_sent")) : ""}</div>` : ""}</td>
+      <td>${statusChip(x)}${(x.attempts > 1 || x.waAt || x.clickedAt) ? `<div class="when" style="margin-top:3px">${[x.attempts > 1 ? esc(t("attempts", fmt(x.attempts))) : "", x.waAt ? esc(t("wa_sent")) : "", x.clickedAt ? "📧 " + esc(t("email_opened")) : ""].filter(Boolean).join(" · ")}</div>` : ""}</td>
       <td class="when">${esc(when(x.calledAt || x.createdAt))}</td>
       <td><button class="btn icon ghost" data-del-call="${esc(x.id)}" aria-label="${esc(t("del_title"))}" title="${esc(t("del_title"))}">${ico("trash")}</button></td>
     </tr>`).join("") || emptyRow(8, t("no_calls"), t("no_calls_s"));
@@ -1209,8 +1287,8 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename;
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
-  const exportCsv = () => saveCsv(`calls-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_type"),t("th_agent"),t("th_status"),t("note_ph"),"Note",t("attempts","#"),t("whatsapp"),t("th_value"),"Added",t("th_last")],
-    S.calls.map(x => [x.phone, x.name, tyTag(typeOf(x)), agentName(x.agentId), stL(x.status), x.result, x.note, x.attempts||0, x.waAt ? t("wa_sent") : "", x.amount||"",
+  const exportCsv = () => saveCsv(`calls-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_type"),t("th_agent"),t("th_status"),t("note_ph"),"Note",t("attempts","#"),t("whatsapp"),t("email_col"),t("th_value"),"Added",t("th_last")],
+    S.calls.map(x => [x.phone, x.name, tyTag(typeOf(x)), agentName(x.agentId), stL(x.status), x.result, x.note, x.attempts||0, x.waAt ? t("wa_sent") : "", x.clickedAt ? new Date(x.clickedAt).toLocaleString("en-GB") : "", x.amount||"",
       x.createdAt ? new Date(x.createdAt).toLocaleString("en-GB") : "", x.calledAt ? new Date(x.calledAt).toLocaleString("en-GB") : ""]));
   const exportOrders = () => saveCsv(`recovered-orders-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_agent"),t("th_value"),t("th_recovered"),t("note_ph")],
     S.ordersNow.map(x => [x.phone, x.name, agentName(x.agentId), x.amount||"", x.calledAt ? new Date(x.calledAt).toLocaleString("en-GB") : "", x.result]));
@@ -1232,7 +1310,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     return e;
   }
   function crunch(list, from, to){
-    const out = {total:0, customers:0, amount:0, orders:[], days:{}};
+    const out = {total:0, customers:0, amount:0, orders:[], days:{}, answered:0, reached:0, toReach:0, q:{}, wa:0};
     Object.keys(TYPES).forEach(k => out[k] = {calls:0, customers:0, res:{}});
     list.forEach(x => {
       const e = attemptsIn(x, from, to); if (!e.length) return;
@@ -1240,6 +1318,11 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       b.calls += e.length; b.customers++; b.res[last] = (b.res[last]||0) + 1;
       out.total += e.length; out.customers++;
       e.forEach(l => { const d = dayKey(l.t); out.days[d] = out.days[d] || {purchased:0, followup:0, checkout:0}; out.days[d][k]++; });
+      const firstAns = e.findIndex(l => l.s !== "no_answer");
+      out.answered += e.filter(l => l.s !== "no_answer").length;
+      if (firstAns >= 0){ out.reached++; out.toReach += firstAns + 1; }
+      e.forEach(l => (Array.isArray(l.q) ? l.q : []).forEach(q => { out.q[q] = (out.q[q] || 0) + 1; }));
+      if (x.waAt && x.waAt >= from && x.waAt <= to) out.wa++;
       if (k === "checkout" && x.status === "interested" && e.some(l => l.s === "interested")){ out.orders.push(x); out.amount += Number(x.amount)||0; }
     });
     return out;
@@ -1297,15 +1380,24 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     $("dayChart").innerHTML = dayChart(d, from, to);
     const card = (k, rateLbl, rateVal, foot) => {
       const b = d[k], T = TYPES[k];
-      const segs = T.results.map(r => ({v:b.res[r]||0, c:RES_COLOR[r], l:stL(r)}));
+      const segs = [...T.results, "no_answer"].map(r => ({v:b.res[r]||0, c:RES_COLOR[r], l:stL(r)}));
       return `<section class="card tc"><div class="hd"><span class="ic ${T.icc}">${ico(T.ic)}</span><h3>${esc(tyName(k))}</h3></div>
         <div class="body">${donut(segs, pctS(rateVal), rateLbl)}<div class="lg">${segs.map(s => `<div><i style="background:${s.c}"></i><span>${esc(s.l)}</span><b>${fmt(s.v)}</b></div>`).join("")}</div></div>
         <div class="foot-stat"><span>${esc(foot[0])}</span><b>${foot[1]}</b></div></section>`;
     };
     $("sTypes").innerHTML =
       card("purchased", t("d_confirmed"), pct(P.res.confirmed||0, P.customers), [t("customers_called"), fmt(P.customers)]) +
-      card("followup", t("d_satisfied"), pct(F.res.happy||0, (F.res.happy||0) + (F.res.issue||0)), [t("customers_called"), fmt(F.customers)]) +
+      card("followup", t("d_satisfied"), pct(F.res.happy||0, (F.res.happy||0) + (F.res.issue||0) + (F.res.return||0)), [t("customers_called"), fmt(F.customers)]) +
       card("checkout", t("d_recovered"), pct(rec, C.customers), [d.amount ? t("rec_revenue") : t("orders_recovered"), d.amount ? esc(money(d.amount)) : fmt(rec)]);
+    const qs = Object.entries(d.q).sort((a,b) => b[1] - a[1]).slice(0, 10), qmax = qs.length ? qs[0][1] : 1;
+    $("sQuestions").innerHTML = qs.map(([q,n]) => `<div class="qrow"><span dir="auto">${esc(q)}</span><div class="bar"><i style="width:${Math.round(n*100/qmax)}%"></i></div><b>${fmt(n)}</b></div>`).join("")
+      || `<div class="empty" style="padding:24px 8px">${ico("chat")}<b>${esc(t("no_q"))}</b></div>`;
+    const avgTry = d.reached ? (d.toReach / d.reached) : 0;
+    $("sReach").innerHTML = `<div class="rgrid">
+      <div class="rbox"><span>${esc(t("answer_rate"))}</span><b>${pctS(pct(d.answered, d.total))}</b><small>${esc(t("answer_rate_s", fmt(d.answered), fmt(d.total)))}</small></div>
+      <div class="rbox"><span>${esc(t("avg_att"))}</span><b>${avgTry ? avgTry.toLocaleString(loc(), {maximumFractionDigits:1}) : "—"}</b></div>
+      <div class="rbox"><span>${esc(t("no_ans_calls"))}</span><b>${fmt(d.total - d.answered)}</b></div>
+      <div class="rbox"><span>${esc(t("wa_count"))}</span><b>${fmt(d.wa)}</b></div></div>`;
     $("sTeamCard").classList.toggle("hidden", !!S.statAgent);
     if (!S.statAgent){
       $("sTeamRows").innerHTML = S.agents.map(a => {
@@ -1362,17 +1454,27 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
   }
   function openModal(id){
     const x = S.calls.find(c => c.id === id); if (!x) return;
-    S.modalId = id; S.draftStatus = null;
+    S.modalId = id; S.draftStatus = null; S.answered = null;
     const k = typeOf(x);
     $("modal").innerHTML = `
       <div class="mh"><div>${typeChip(x)}<h3 id="mName" dir="auto">${esc(x.name || t("no_name"))}</h3></div><button class="x" id="mClose" aria-label="${esc(t("close"))}">${ico("x")}</button></div>
-      <div class="big">${esc(x.phone)}</div>
+      <div class="row" style="justify-content:space-between;margin:2px 0 10px"><div class="big" style="margin:0">${esc(x.phone)}</div>
+        <a class="btn primary" href="tel:${esc(cleanPhone(x.phone))}">${ico("phone")}${esc(t("call"))}</a></div>
       ${x.note ? `<p class="small muted" style="margin:-4px 0 10px" dir="auto">${esc(x.note)}</p>` : ""}
       <div class="hint">${ico("info")}<span>${esc(tyHint(k))}</span></div>
       ${x.attempts ? `<p class="small muted" style="margin:0 0 10px">${esc(t("called_before", LANG === "en" ? x.attempts : fmt(x.attempts)))}${x.result ? `. ${esc(t("last_note"))}: <span dir="auto">${esc(x.result)}</span>` : ""}</p>` : ""}
-      <div class="small" style="font-weight:700;margin-bottom:6px">${esc(t("call_result"))}</div>
-      <div class="res">${TYPES[k].results.map(r => `<button data-result="${r}" aria-pressed="false">${esc(stL(r))}</button>`).join("")}</div>
-      <p class="small muted hidden" id="retryNote" style="margin:0 0 10px">${esc(t("retry_note", time(now() + RETRY_HOURS*HOUR)))}</p>
+      <div class="small" style="font-weight:700;margin-bottom:6px">${esc(t("did_answer"))}</div>
+      <div class="res two"><button data-ans="yes" aria-pressed="false">✅ ${esc(t("answered"))}</button><button data-ans="no" aria-pressed="false">📵 ${esc(t("no_answer_btn"))}</button></div>
+      <div id="outBox" class="hidden">
+        <div class="small" style="font-weight:700;margin-bottom:6px">${esc(t("what_happened"))}</div>
+        <div class="res">${TYPES[k].results.map(r => `<button data-result="${r}" aria-pressed="false">${esc(stL(r))}</button>`).join("")}</div>
+      </div>
+      <div id="qBox" class="hidden" style="margin-bottom:10px">
+        <div class="small" style="font-weight:700;margin-bottom:6px">${esc(t("cust_q"))}</div>
+        <div class="qchips">${S.questions.map(q => `<button type="button" data-q="${esc(q)}" aria-pressed="false" dir="auto">${esc(q)}</button>`).join("")}</div>
+        <input type="text" id="qOther" dir="auto" placeholder="${esc(t("other_q"))}">
+      </div>
+      <p class="small muted hidden" id="retryNote" style="margin:0 0 10px"></p>
       <div id="amountBox" class="hidden" style="margin-bottom:10px"><label for="amountIn" class="fld" style="margin-top:0">${esc(t("amount_lbl"))}</label><input type="text" id="amountIn" inputmode="decimal" dir="ltr" placeholder="${esc(t("amount_ph"))}"></div>
       <textarea id="resultNote" placeholder="${esc(t("note_ph"))}" dir="auto"></textarea>
       <div class="mf"><button class="btn primary" id="saveResult" disabled>${esc(t("save_result"))}</button>
@@ -1380,12 +1482,24 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     $("modalBack").classList.remove("hidden");
   }
   function closeModal(){ S.modalId = null; $("modalBack").classList.add("hidden"); }
+  function showRetry(st){
+    const at = retryFor(st, now()), el = $("retryNote");
+    if (!at){ el.classList.add("hidden"); return; }
+    el.textContent = st === "no_answer" ? t("retry_note", time(at)) : t("later_note", dateL(at, {weekday:"long", month:"short", day:"numeric"}));
+    el.classList.remove("hidden");
+  }
   async function saveResult(){
     const x = S.calls.find(c => c.id === S.modalId);
     if (!x || !S.draftStatus) return;
     const tm = now(), st = S.draftStatus, note = $("resultNote").value.trim();
-    const retryAt = st === "no_answer" ? tm + RETRY_HOURS*HOUR : null;
-    const patch = {status:st, result:note, calledAt:tm, updatedAt:tm, retryAt, attempts:(x.attempts||0)+1, log:[...(Array.isArray(x.log) ? x.log : []).slice(-19), {s:st, n:note, t:tm}]};
+    const retryAt = retryFor(st, tm);
+    const entry = {s:st, n:note, t:tm};
+    if (Q_STATUSES.includes(st)){
+      const qs = [...document.querySelectorAll("[data-q][aria-pressed='true']")].map(b => b.dataset.q);
+      const other = ($("qOther").value || "").trim(); if (other) qs.push(other);
+      if (qs.length) entry.q = qs;
+    }
+    const patch = {status:st, result:note, calledAt:tm, updatedAt:tm, retryAt, attempts:(x.attempts||0)+1, log:[...(Array.isArray(x.log) ? x.log : []).slice(-19), entry]};
     const amt = SALE.includes(st) ? toNum($("amountIn").value) : 0; if (amt > 0) patch.amount = amt;
     $("saveResult").disabled = true;
     try {
@@ -1396,9 +1510,15 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
         if (fu){ try { await upd(fu.id, {status:"skipped", result: t(st === "wrong" ? "wrong_note" : "cancelled_note"), updatedAt:tm}); } catch(e){} }
       }
       closeModal();
-      toast(st === "no_answer" ? t("saved_retry", time(retryAt)) : t("saved", stL(st)));
+      toast(st === "no_answer" ? t("saved_retry", time(retryAt)) : retryAt ? t("saved_later", when(retryAt)) : t("saved", stL(st)));
       refetch("calls");
     } catch(e){ writeErr(e); $("saveResult").disabled = false; }
+  }
+  function retryFor(st, tm){
+    if (st === "no_answer") return tm + RETRY_HOURS*HOUR;
+    if (st === "later") return tm + LATER_DAYS*DAY;
+    if (st === "not_tried") return tm + NOT_TRIED_DAYS*DAY;
+    return null;
   }
   async function markWa(id){ try { await upd(id, {waAt: now(), updatedAt: now()}); } catch(e){} }
   function checkNew(){
@@ -1445,20 +1565,33 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     if (ds.delCall){ deleteCall(ds.delCall); return; }
     if (ds.tab){ S.tab = ds.tab; renderAgent(); return; }
     if (ds.open){ openModal(ds.open); return; }
+    if (ds.ans){
+      S.answered = ds.ans;
+      document.querySelectorAll("[data-ans]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      document.querySelectorAll("[data-result]").forEach(x => x.setAttribute("aria-pressed", "false"));
+      $("outBox").classList.toggle("hidden", ds.ans !== "yes");
+      $("qBox").classList.add("hidden"); $("amountBox").classList.add("hidden");
+      if (ds.ans === "no"){ S.draftStatus = "no_answer"; showRetry("no_answer"); $("saveResult").disabled = false; }
+      else { S.draftStatus = null; $("retryNote").classList.add("hidden"); $("saveResult").disabled = true; }
+      return;
+    }
     if (ds.result){
       S.draftStatus = ds.result;
       document.querySelectorAll("[data-result]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
       $("saveResult").disabled = false;
-      $("retryNote").classList.toggle("hidden", ds.result !== "no_answer");
+      showRetry(ds.result);
       $("amountBox").classList.toggle("hidden", !SALE.includes(ds.result));
+      $("qBox").classList.toggle("hidden", !Q_STATUSES.includes(ds.result));
       return;
     }
+    if (ds.q !== undefined && b.closest(".qchips")){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
     switch (b.id){
       case "pwBtn": changePassword(); break;
       case "outBtn": signOut(); break;
       case "addAgentBtn": addAgent(); break;
       case "addNumbersBtn": addNumbers($("numbersInput").value); break;
       case "saveTpl": saveTemplates(); break;
+      case "saveQ": saveQuestions(); break;
       case "saveResult": saveResult(); break;
       case "mClose": closeModal(); break;
       case "newDismiss": S.newCount = 0; renderAgent(); break;
