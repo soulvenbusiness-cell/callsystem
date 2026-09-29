@@ -86,13 +86,14 @@ main.page{padding:28px 36px 48px;max-width:1240px;width:100%}
 [lang="ar"] .ph h1{letter-spacing:0}
 .ph p{margin:4px 0 0;color:var(--muted)}
 @media (max-width:900px){
-  .shell{grid-template-columns:1fr}
+  .shell{grid-template-columns:minmax(0,1fr)}
   .side{position:sticky;top:0;height:auto;z-index:6;flex-direction:row;align-items:center;flex-wrap:wrap;padding:10px 14px;border-inline-end:0;border-bottom:1px solid var(--line);gap:8px}
   .logo{padding:0;font-size:1rem}
   .nav{flex-direction:row;overflow-x:auto;order:3;width:100%}
   .nav button{white-space:nowrap}
   .side .foot{margin:0;margin-inline-start:auto;flex-direction:row;align-items:center;border:0;padding:0;flex-wrap:wrap;justify-content:flex-end}
-  .side .foot .me,.side .foot .live{display:none}
+  .side .foot .live,.side .foot .me .av,.side .foot .me .who2{display:none}
+  .side .foot .me{padding:0}
   main.page{padding:20px 16px 40px}
   .ph h1{font-size:1.35rem}
 }
@@ -194,6 +195,7 @@ table.t{width:100%;border-collapse:separate;border-spacing:0;min-width:680px}
 .t select{width:auto;padding:5px 8px;font-size:.84rem}
 .t input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
 .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+@media (min-width:761px){ td.c-ac .acts{flex-wrap:nowrap} }
 .amt{width:120px !important;padding:6px 8px !important;direction:ltr;text-align:right}
 .empty{padding:40px 12px;text-align:center;color:var(--muted)}
 .empty svg{width:56px;height:56px;margin-bottom:6px;stroke-width:1.2;color:var(--empty)}
@@ -208,12 +210,16 @@ table.t{width:100%;border-collapse:separate;border-spacing:0;min-width:680px}
   .cards table.t{min-width:0}
   .cards .t thead{display:none}
   .cards .t, .cards .t tbody{display:block}
-  .cards .t tr{display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .cards .t td.who{grid-column:1;grid-row:1;min-width:0}
+  .cards .t tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:14px 0;border-bottom:1px solid var(--line)}
   .cards .t tr:last-child{border-bottom:0}
   .cards .t td{display:block;padding:0;border:0;background:none !important}
   .cards .t td.c-ph{grid-column:1;grid-row:2;justify-self:start}
   .cards .t td.c-ty{grid-column:2;grid-row:1;justify-self:end}
   .cards .t td.c-st{grid-column:2;grid-row:2;justify-self:end}
+  .cards .t td.c-val{grid-column:1;grid-row:3;font-weight:700}
+  .cards .t td.c-pcs{grid-column:2;grid-row:3;justify-self:end;color:var(--muted)}
+  .cards .t td.c-na{display:none}
   .cards .t td.c-ac{grid-column:1 / -1;margin-top:6px}
   .cards .acts{justify-content:flex-start}
   .cards .acts .btn{flex:1}
@@ -497,7 +503,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
         </div>
         <div class="bulk hidden" id="bulkBar"><span id="bulkTxt"></span><button class="btn sm push" id="bulkDel"><svg class="i"><use href="#i-trash"/></svg><span data-i="delete_selected"></span></button><button class="btn sm ghost" id="bulkClear" data-i="cancel"></button></div>
         <div class="tw"><table class="t">
-          <thead><tr><th style="width:34px"><input type="checkbox" id="selAll"></th><th data-i="th_customer"></th><th data-i="th_phone"></th><th data-i="th_type"></th><th data-i="th_agent"></th><th data-i="th_status"></th><th data-i="th_last"></th><th></th></tr></thead>
+          <thead><tr><th style="width:34px"><input type="checkbox" id="selAll"></th><th data-i="th_customer"></th><th data-i="th_phone"></th><th data-i="th_type"></th><th data-i="th_order_value"></th><th data-i="th_pcs"></th><th data-i="th_agent"></th><th data-i="th_status"></th><th data-i="th_last"></th><th></th></tr></thead>
           <tbody id="allRows"></tbody>
         </table></div>
       </section>
@@ -515,7 +521,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
           <button role="tab" data-tab="done" aria-selected="false"><span data-i="tab_done"></span> <span class="n" id="n_done"></span></button>
         </div>
         <div class="tw cards"><table class="t">
-          <thead><tr><th data-i="th_customer"></th><th data-i="th_phone"></th><th data-i="th_type"></th><th data-i="th_status"></th><th></th></tr></thead>
+          <thead><tr><th data-i="th_customer"></th><th data-i="th_phone"></th><th data-i="th_type"></th><th data-i="th_order_value"></th><th data-i="th_pcs"></th><th data-i="th_status"></th><th></th></tr></thead>
           <tbody id="myRows"></tbody>
         </table></div>
       </section>
@@ -729,7 +735,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     rename:"Rename", rename_title:"Rename agent", renamed:"Name updated", agent_name:"Name",
     rm_q:(n,o) => `Delete ${n}'s account? They won't be able to sign in anymore.` + (o ? ` Their ${o} open calls will stay unassigned until you reassign them.` : ""),
     func_err:"The manage-agents function isn't reachable. Check that it's deployed in Supabase.",
-    email_opened:"Opened from email", email_col:"Opened from email", split_result:(l) => ` Assigned: ${l}.`,
+    email_opened:"Opened from email", email_col:"Opened from email", split_result:(l) => ` Assigned: ${l}.`, th_order_value:"Order value", th_pcs:"Pieces", pcs:(n) => `${n} ${n == 1 ? "piece" : "pieces"}`,
     did_answer:"Did the customer answer?", answered:"Answered", no_answer_btn:"No answer", what_happened:"What happened?",
     cust_q:"Questions the customer asked", other_q:"Another question (optional)",
     later_note:(d) => `This customer comes back to "Call now" on ${d}.`, saved_later:(d) => `Saved. They'll come back on ${d}.`,
@@ -752,7 +758,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     rename:"تغيير الاسم", rename_title:"تغيير اسم الموظف", renamed:"الاسم اتغير", agent_name:"الاسم",
     rm_q:(n,o) => `حذف حساب ${n}؟ مش هيقدر يدخل تاني.` + (o ? ` الـ${o} مكالمة المفتوحة بتاعته هتفضل من غير موظف لحد ما توزعها.` : ""),
     func_err:"فانكشن manage-agents مش شغالة. اتأكد إنها متعملها Deploy في Supabase.",
-    email_opened:"فتحها من الإيميل", email_col:"فتحها من الإيميل", split_result:(l) => ` اتوزعوا: ${l}.`,
+    email_opened:"فتحها من الإيميل", email_col:"فتحها من الإيميل", split_result:(l) => ` اتوزعوا: ${l}.`, th_order_value:"قيمة الأوردر", th_pcs:"عدد القطع", pcs:(n) => `${n} قطعة`,
     did_answer:"العميل ردّ؟", answered:"ردّ", no_answer_btn:"مردش", what_happened:"حصل إيه؟",
     cust_q:"الأسئلة اللي العميل سألها", other_q:"سؤال تاني (اختياري)",
     later_note:(d) => `العميل ده هيرجعلك في "كلّمهم دلوقتي" يوم ${d}.`, saved_later:(d) => `اتحفظ. هيرجعلك يوم ${d}.`,
@@ -807,12 +813,12 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
   const isManager = () => S.me && S.me.role === "manager";
 
   /* ---------- row mapping (database snake_case <-> app camelCase) ---------- */
-  const COLS = {clickedAt:"clicked_at", clickCount:"click_count", agentId:"agent_id", followupId:"followup_id", parentId:"parent_id", externalId:"external_id", createdAt:"created_at", updatedAt:"updated_at", calledAt:"called_at", retryAt:"retry_at", dueAt:"due_at", waAt:"wa_at"};
+  const COLS = {itemsCount:"items_count", clickedAt:"clicked_at", clickCount:"click_count", agentId:"agent_id", followupId:"followup_id", parentId:"parent_id", externalId:"external_id", createdAt:"created_at", updatedAt:"updated_at", calledAt:"called_at", retryAt:"retry_at", dueAt:"due_at", waAt:"wa_at"};
   const num = (v) => v === null || v === undefined ? null : Number(v);
   function fromRow(r){
     return {id:r.id, type:r.type, phone:r.phone, name:r.name||"", note:r.note||"", agentId:r.agent_id, status:r.status, result:r.result||"", attempts:r.attempts||0,
       amount: r.amount === null ? null : Number(r.amount), log: Array.isArray(r.log) ? r.log : [], followupId:r.followup_id, parentId:r.parent_id,
-      createdAt:num(r.created_at), updatedAt:num(r.updated_at), calledAt:num(r.called_at), retryAt:num(r.retry_at), dueAt:num(r.due_at), waAt:num(r.wa_at), clickedAt:num(r.clicked_at), clickCount:r.click_count||0};
+      createdAt:num(r.created_at), updatedAt:num(r.updated_at), calledAt:num(r.called_at), retryAt:num(r.retry_at), dueAt:num(r.due_at), waAt:num(r.wa_at), clickedAt:num(r.clicked_at), clickCount:r.click_count||0, itemsCount:num(r.items_count)};
   }
   function toRow(o){ const r = {}; Object.keys(o).forEach(k => { r[COLS[k] || k] = o[k]; }); return r; }
   async function upd(id, patch){ const { error } = await S.sb.from("calls").update(toRow(patch)).eq("id", id); if (error) throw error; }
@@ -867,6 +873,10 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       .replace(/ +/g," ").replace(/ ([👋،,.])/g,"$1").trim();
     return `https://wa.me/${waNumber(x.phone)}?text=${encodeURIComponent(msg)}`;
   }
+  const isOrder = (x) => typeOf(x) === "purchased";
+  const valCell = (x) => isOrder(x) && Number(x.amount) > 0 ? esc(money(x.amount)) : `<span class="muted">—</span>`;
+  const pcsCell = (x) => isOrder(x) && Number(x.itemsCount) > 0 ? esc(t("pcs", fmt(x.itemsCount))) : `<span class="muted">—</span>`;
+  const subLine = (x, tab) => typeOf(x) === "checkout" ? (x.result || "") : (tab === "done" ? x.result : (x.result || x.note));
   const emptyRow = (cols, title, text, icon) => `<tr><td colspan="${cols}"><div class="empty">${ico(icon || "inbox")}<b>${esc(title)}</b>${esc(text || "")}</div></td></tr>`;
   const kpi = (label, value, sub, icon, cls) => `<div class="kpi ${cls||""}"><div class="top"><span>${esc(label)}</span><span class="ic ${icon[1]||""}">${ico(icon[0])}</span></div><div class="v">${value}</div><div class="s">${esc(sub||"")}</div></div>`;
 
@@ -1242,14 +1252,16 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     const opts = (sel) => S.agents.map(a => `<option value="${esc(a.id)}"${a.id===sel?" selected":""}>${esc(a.name)}</option>`).join("") + (S.agents.some(a => a.id === sel) ? "" : `<option selected value="">${esc(t("unassigned"))}</option>`);
     $("allRows").innerHTML = rows.map(x => `<tr>
       <td><input type="checkbox" data-sel="${esc(x.id)}" ${S.sel.has(x.id) ? "checked" : ""}></td>
-      <td class="who" dir="auto"><b>${esc(x.name || t("no_name"))}</b>${(x.result || x.note) ? `<span title="${esc(x.result || x.note)}">${esc(x.result || x.note)}</span>` : ""}</td>
+      <td class="who" dir="auto"><b>${esc(x.name || t("no_name"))}</b>${subLine(x) ? `<span title="${esc(subLine(x))}">${esc(subLine(x))}</span>` : ""}</td>
       <td class="ph-n">${esc(x.phone)}</td>
       <td>${typeChip(x)}</td>
+      <td class="num" style="white-space:nowrap">${valCell(x)}</td>
+      <td class="num" style="white-space:nowrap">${pcsCell(x)}</td>
       <td><select data-reassign="${esc(x.id)}">${opts(x.agentId)}</select></td>
       <td>${statusChip(x)}${(x.attempts > 1 || x.waAt || x.clickedAt) ? `<div class="when" style="margin-top:3px">${[x.attempts > 1 ? esc(t("attempts", fmt(x.attempts))) : "", x.waAt ? esc(t("wa_sent")) : "", x.clickedAt ? "📧 " + esc(t("email_opened")) : ""].filter(Boolean).join(" · ")}</div>` : ""}</td>
       <td class="when">${esc(when(x.calledAt || x.createdAt))}</td>
       <td><button class="btn icon ghost" data-del-call="${esc(x.id)}" aria-label="${esc(t("del_title"))}" title="${esc(t("del_title"))}">${ico("trash")}</button></td>
-    </tr>`).join("") || emptyRow(8, t("no_calls"), t("no_calls_s"));
+    </tr>`).join("") || emptyRow(10, t("no_calls"), t("no_calls_s"));
     renderBulk();
   }
   function renderBulk(){
@@ -1287,8 +1299,8 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename;
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
-  const exportCsv = () => saveCsv(`calls-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_type"),t("th_agent"),t("th_status"),t("note_ph"),"Note",t("attempts","#"),t("whatsapp"),t("email_col"),t("th_value"),"Added",t("th_last")],
-    S.calls.map(x => [x.phone, x.name, tyTag(typeOf(x)), agentName(x.agentId), stL(x.status), x.result, x.note, x.attempts||0, x.waAt ? t("wa_sent") : "", x.clickedAt ? new Date(x.clickedAt).toLocaleString("en-GB") : "", x.amount||"",
+  const exportCsv = () => saveCsv(`calls-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_type"),t("th_agent"),t("th_status"),t("note_ph"),"Note",t("attempts","#"),t("whatsapp"),t("email_col"),t("th_order_value"),t("th_pcs"),"Added",t("th_last")],
+    S.calls.map(x => [x.phone, x.name, tyTag(typeOf(x)), agentName(x.agentId), stL(x.status), x.result, x.note, x.attempts||0, x.waAt ? t("wa_sent") : "", x.clickedAt ? new Date(x.clickedAt).toLocaleString("en-GB") : "", x.amount||"", x.itemsCount||"",
       x.createdAt ? new Date(x.createdAt).toLocaleString("en-GB") : "", x.calledAt ? new Date(x.calledAt).toLocaleString("en-GB") : ""]));
   const exportOrders = () => saveCsv(`recovered-orders-${stamp()}.csv`, [t("th_phone"),t("th_customer"),t("th_agent"),t("th_value"),t("th_recovered"),t("note_ph")],
     S.ordersNow.map(x => [x.phone, x.name, agentName(x.agentId), x.amount||"", x.calledAt ? new Date(x.calledAt).toLocaleString("en-GB") : "", x.result]));
@@ -1313,8 +1325,9 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     const out = {total:0, customers:0, amount:0, orders:[], days:{}, answered:0, reached:0, toReach:0, q:{}, wa:0};
     Object.keys(TYPES).forEach(k => out[k] = {calls:0, customers:0, res:{}});
     list.forEach(x => {
-      const e = attemptsIn(x, from, to); if (!e.length) return;
-      const k = typeOf(x), last = e[e.length-1].s, b = out[k];
+      const all = attemptsIn(x, from, to); if (!all.length) return;
+      const e = all.filter(l => !l.auto);              // real calls (Shopify updates are not calls)
+      const k = typeOf(x), last = all[all.length-1].s, b = out[k];
       b.calls += e.length; b.customers++; b.res[last] = (b.res[last]||0) + 1;
       out.total += e.length; out.customers++;
       e.forEach(l => { const d = dayKey(l.t); out.days[d] = out.days[d] || {purchased:0, followup:0, checkout:0}; out.days[d][k]++; });
@@ -1323,7 +1336,7 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       if (firstAns >= 0){ out.reached++; out.toReach += firstAns + 1; }
       e.forEach(l => (Array.isArray(l.q) ? l.q : []).forEach(q => { out.q[q] = (out.q[q] || 0) + 1; }));
       if (x.waAt && x.waAt >= from && x.waAt <= to) out.wa++;
-      if (k === "checkout" && x.status === "interested" && e.some(l => l.s === "interested")){ out.orders.push(x); out.amount += Number(x.amount)||0; }
+      if (k === "checkout" && x.status === "interested" && all.some(l => l.s === "interested")){ out.orders.push(x); out.amount += Number(x.amount)||0; }
     });
     return out;
   }
@@ -1442,14 +1455,14 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
     const rows = S.tab === "now" ? n : S.tab === "later" ? l : d;
     const E = {now:[t("e_now"), t("e_now_s"), "check"], later:[t("e_later"), t("e_later_s"), "clock"], done:[t("e_done"), "", "phone"]}[S.tab];
     $("myRows").innerHTML = rows.map(x => {
-      const sub = S.tab === "done" ? x.result : (x.result || x.note);
+      const sub = subLine(x, S.tab);
       const acts = S.tab === "done" ? `<span class="when">${esc(when(x.calledAt))}</span>` : `<div class="acts">
         <a class="btn primary sm" href="tel:${esc(cleanPhone(x.phone))}" data-call="${esc(x.id)}">${ico("phone")}${esc(t("call"))}</a>
         ${x.status === "no_answer" ? `<a class="btn wa sm" href="${esc(waLink(x))}" target="_blank" rel="noopener" data-wa="${esc(x.id)}">${ico("wa")}${esc(t("whatsapp"))}</a>` : ""}
         <button class="btn sm" data-open="${esc(x.id)}">${esc(t("log_result"))}</button></div>`;
       return `<tr><td class="who" dir="auto"><b>${esc(x.name || t("no_name"))}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</td>
-        <td class="ph-n c-ph">${esc(x.phone)}</td><td class="c-ty">${typeChip(x)}</td><td class="c-st">${statusChip(x)}</td><td class="c-ac">${acts}</td></tr>`;
-    }).join("") || emptyRow(5, E[0], E[1], E[2]);
+        <td class="ph-n c-ph">${esc(x.phone)}</td><td class="c-ty">${typeChip(x)}</td>${isOrder(x) ? `<td class="c-val num">${valCell(x)}</td><td class="c-pcs num">${pcsCell(x)}</td>` : `<td class="c-val c-na"><span class="muted">—</span></td><td class="c-pcs c-na"><span class="muted">—</span></td>`}<td class="c-st">${statusChip(x)}</td><td class="c-ac">${acts}</td></tr>`;
+    }).join("") || emptyRow(7, E[0], E[1], E[2]);
     if (S.modalId && !S.calls.some(c => c.id === S.modalId)) closeModal();
   }
   function openModal(id){
@@ -1460,7 +1473,8 @@ input[type=email],input[type=password]{width:100%;background:var(--card);border:
       <div class="mh"><div>${typeChip(x)}<h3 id="mName" dir="auto">${esc(x.name || t("no_name"))}</h3></div><button class="x" id="mClose" aria-label="${esc(t("close"))}">${ico("x")}</button></div>
       <div class="row" style="justify-content:space-between;margin:2px 0 10px"><div class="big" style="margin:0">${esc(x.phone)}</div>
         <a class="btn primary" href="tel:${esc(cleanPhone(x.phone))}">${ico("phone")}${esc(t("call"))}</a></div>
-      ${x.note ? `<p class="small muted" style="margin:-4px 0 10px" dir="auto">${esc(x.note)}</p>` : ""}
+      ${isOrder(x) && (Number(x.amount) > 0 || Number(x.itemsCount) > 0) ? `<div class="row" style="gap:8px;margin:-2px 0 10px">${Number(x.amount) > 0 ? `<span class="chip s-ok">${esc(money(x.amount))}</span>` : ""}${Number(x.itemsCount) > 0 ? `<span class="chip s-grey">${esc(t("pcs", fmt(x.itemsCount)))}</span>` : ""}</div>` : ""}
+      ${x.note && typeOf(x) !== "checkout" ? `<p class="small muted" style="margin:-4px 0 10px" dir="auto">${esc(x.note)}</p>` : ""}
       <div class="hint">${ico("info")}<span>${esc(tyHint(k))}</span></div>
       ${x.attempts ? `<p class="small muted" style="margin:0 0 10px">${esc(t("called_before", LANG === "en" ? x.attempts : fmt(x.attempts)))}${x.result ? `. ${esc(t("last_note"))}: <span dir="auto">${esc(x.result)}</span>` : ""}</p>` : ""}
       <div class="small" style="font-weight:700;margin-bottom:6px">${esc(t("did_answer"))}</div>
